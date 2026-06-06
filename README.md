@@ -194,31 +194,31 @@ npm run dev
 ## Screenshots
 
 ### Dashboard
-![Dashboard](https://raw.githubusercontent.com/learnjava0/Odoo-x-KSV-Hackathon-2026/main/Frontend/src/assets/dashboard.png)
+![Dashboard](https://raw.githubusercontent.com/learnjava0/Odoo-x-KSV-Hackathon-2026/main/Frontend/assets/dashboard.png)
 *Live procurement pipeline — metric cards, workflow tracker, spending trend chart, and recent activity feed.*
 
 ### Vendor Management
-![Vendors](https://raw.githubusercontent.com/learnjava0/Odoo-x-KSV-Hackathon-2026/main/Frontend/src/assets/vendore.png)
+![Vendors](https://raw.githubusercontent.com/learnjava0/Odoo-x-KSV-Hackathon-2026/main/Frontend/assets/vendore.png)
 *Searchable vendor directory with status filter tabs (Active / Pending / Blocked), View button, and Admin approve/block actions.*
 
 ### Create RFQ
-![Create RFQ](https://raw.githubusercontent.com/learnjava0/Odoo-x-KSV-Hackathon-2026/main/Frontend/src/assets/rfq_creation.png)
+![Create RFQ](https://raw.githubusercontent.com/learnjava0/Odoo-x-KSV-Hackathon-2026/main/Frontend/assets/rfq_creation.png)
 *Full-page RFQ form with line items table, vendor assignment typeahead, and drag-and-drop file attachment.*
 
 ### Submit Quotation (Vendor View)
-![Submit Quotation](https://raw.githubusercontent.com/learnjava0/Odoo-x-KSV-Hackathon-2026/main/Frontend/src/assets/quatation_submission.png)
+![Submit Quotation](https://raw.githubusercontent.com/learnjava0/Odoo-x-KSV-Hackathon-2026/main/Frontend/assets/quatation_submission.png)
 *Vendor quotation form with itemised pricing, auto-calculated GST breakdown (subtotal / GST 18% / grand total), and payment terms.*
 
 ### Quotation Comparison
-![Quotation Comparison](https://raw.githubusercontent.com/learnjava0/Odoo-x-KSV-Hackathon-2026/main/Frontend/src/assets/quatation.png)
+![Quotation Comparison](https://raw.githubusercontent.com/learnjava0/Odoo-x-KSV-Hackathon-2026/main/Frontend/assets/quatation.png)
 *Side-by-side vendor comparison with lowest-price column highlighted green, price-performance score, and "Select & Approve" button.*
 
 ### Approval Workflow
-![Approvals](https://raw.githubusercontent.com/learnjava0/Odoo-x-KSV-Hackathon-2026/main/Frontend/src/assets/approvals.png)
+![Approvals](https://raw.githubusercontent.com/learnjava0/Odoo-x-KSV-Hackathon-2026/main/Frontend/assets/approvals.png)
 *Per-quotation approval card with 4-step stepper, approval chain, remarks textarea, quotation summary, and Approve/Reject buttons.*
 
 ### Purchase Orders & Invoices
-![Documents](https://raw.githubusercontent.com/learnjava0/Odoo-x-KSV-Hackathon-2026/main/Frontend/src/assets/invoice.png)
+![Documents](https://raw.githubusercontent.com/learnjava0/Odoo-x-KSV-Hackathon-2026/main/Frontend/assets/invoice.png)
 *Expandable invoice rows showing full CGST/SGST/IGST breakdown, vendor details, line items, Download/Print/Email actions.*
 
 ### Activity & Logs
