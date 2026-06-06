@@ -1,0 +1,69 @@
+# ====================================================================
+# Spring Boot (Maven) - Target & Wrappers
+# ====================================================================
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# System logs aur crash reports
+*.log
+*.err
+*.pid
+
+# ====================================================================
+# Configuration & Environment Variables (CRITICAL - Security)
+# ====================================================================
+# Database passwords aur JWT keys locally hi rehne chahiye, git par nahi
+.env
+*.env
+application.properties.local
+application.yml.local
+
+# Default system files
+HELP.md
+
+# ====================================================================
+# Spring Tool Suite (STS) / Eclipse
+# ====================================================================
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+# ====================================================================
+# IntelliJ IDEA
+# ====================================================================
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# ====================================================================
+# NetBeans
+# ====================================================================
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# ====================================================================
+# VS Code
+# ====================================================================
+.vscode/
+*.code-workspace
+.history/
+
+# ====================================================================
+# OS Specific Files
+# ====================================================================
+.DS_Store
+Thumbs.db
