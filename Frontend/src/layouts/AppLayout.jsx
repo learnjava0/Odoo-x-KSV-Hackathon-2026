@@ -1,19 +1,21 @@
 import {
-  Assessment,
-  AssignmentTurnedIn,
-  Dashboard,
-  Description,
-  Gavel,
-  Inventory,
-  LocalShipping,
+  AssessmentOutlined,
+  AssignmentTurnedInOutlined,
+  DashboardOutlined,
+  DescriptionOutlined,
+  GavelOutlined,
+  Inventory2Outlined,
+  LocalShippingOutlined,
   Logout,
-  Notifications,
-  Receipt
+  Menu,
+  NotificationsNoneOutlined,
+  ReceiptLongOutlined
 } from '@mui/icons-material';
 import {
   AppBar,
+  Avatar,
   Box,
-  Button,
+  Divider,
   Drawer,
   IconButton,
   List,
@@ -24,72 +26,124 @@ import {
   Tooltip,
   Typography
 } from '@mui/material';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../store/store.js';
 
+const drawerWidth = 228;
+
 const nav = [
-  { label: 'Dashboard', to: '/', icon: <Dashboard /> },
-  { label: 'Vendors', to: '/vendors', icon: <Inventory /> },
-  { label: 'RFQs', to: '/rfqs', icon: <Description /> },
-  { label: 'Quotations', to: '/quotations', icon: <AssignmentTurnedIn /> },
-  { label: 'Approvals', to: '/approvals', icon: <Gavel /> },
-  { label: 'PO & Invoice', to: '/documents', icon: <Receipt /> },
-  { label: 'Notifications', to: '/notifications', icon: <Notifications /> },
-  { label: 'Reports', to: '/reports', icon: <Assessment /> }
+  { label: 'Dashboard', to: '/', icon: <DashboardOutlined /> },
+  { label: 'Vendors', to: '/vendors', icon: <Inventory2Outlined /> },
+  { label: 'RFQs', to: '/rfqs', icon: <DescriptionOutlined /> },
+  { label: 'Quotations', to: '/quotations', icon: <AssignmentTurnedInOutlined /> },
+  { label: 'Approvals', to: '/approvals', icon: <GavelOutlined /> },
+  { label: 'PO & Invoices', to: '/documents', icon: <ReceiptLongOutlined /> },
+  { label: 'Reports', to: '/reports', icon: <AssessmentOutlined /> },
+  { label: 'Activity', to: '/notifications', icon: <NotificationsNoneOutlined /> }
 ];
 
 export default function AppLayout() {
+  const [mobileOpen, setMobileOpen] = useState(false);
   const user = useSelector((state) => state.auth.user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const signOut = () => {
     dispatch(logout());
     navigate('/login');
   };
 
+  const drawer = (
+    <Box className="sidebar">
+      <Toolbar className="sidebar-brand">
+        <Box className="brand-mark"><LocalShippingOutlined fontSize="small" /></Box>
+        <Box>
+          <Typography className="brand-name">VendorBridge</Typography>
+          <Typography className="brand-caption">Procurement workspace</Typography>
+        </Box>
+      </Toolbar>
+      <Divider />
+      <Typography className="nav-label">Workspace</Typography>
+      <List className="nav-list">
+        {nav.map((item) => (
+          <ListItemButton
+            key={item.to}
+            component={NavLink}
+            to={item.to}
+            onClick={() => setMobileOpen(false)}
+            className={location.pathname === item.to ? 'active' : ''}
+          >
+            <ListItemIcon>{item.icon}</ListItemIcon>
+            <ListItemText primary={item.label} />
+          </ListItemButton>
+        ))}
+      </List>
+      <Box className="sidebar-footer">
+        <Avatar>{user?.name?.charAt(0)?.toUpperCase() || 'U'}</Avatar>
+        <Box sx={{ minWidth: 0 }}>
+          <Typography className="sidebar-user" noWrap>{user?.name || 'User'}</Typography>
+          <Typography className="sidebar-role" noWrap>{user?.role || 'Procurement'}</Typography>
+        </Box>
+      </Box>
+    </Box>
+  );
+
   return (
-    <Box className="app-shell" sx={{ display: 'flex' }}>
-      <AppBar position="fixed" elevation={0} sx={{ borderBottom: '1px solid #dce4e8', bgcolor: '#ffffff', color: '#1f2937' }}>
+    <Box className="app-shell">
+      <AppBar className="topbar" position="fixed" elevation={0}>
         <Toolbar>
-          <LocalShipping sx={{ color: '#25636f', mr: 1 }} />
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>VendorBridge ERP</Typography>
-          <Typography variant="body2" sx={{ mr: 2 }}>{user?.name} · {user?.role}</Typography>
-          <Tooltip title="Logout">
-            <IconButton onClick={signOut} aria-label="logout">
-              <Logout />
-            </IconButton>
-          </Tooltip>
+          <IconButton
+            aria-label="open navigation"
+            onClick={() => setMobileOpen(true)}
+            sx={{ display: { md: 'none' }, mr: 1 }}
+          >
+            <Menu />
+          </IconButton>
+          <Box sx={{ flexGrow: 1 }}>
+            <Typography className="topbar-title">Procurement Operations</Typography>
+            <Typography className="topbar-subtitle">Manage sourcing from request to payment</Typography>
+          </Box>
+          <Box className="topbar-user">
+            <Box sx={{ textAlign: 'right', display: { xs: 'none', sm: 'block' } }}>
+              <Typography className="topbar-user-name">{user?.name}</Typography>
+              <Typography className="topbar-user-role">{user?.role}</Typography>
+            </Box>
+            <Tooltip title="Sign out">
+              <IconButton onClick={signOut} aria-label="sign out"><Logout fontSize="small" /></IconButton>
+            </Tooltip>
+          </Box>
         </Toolbar>
       </AppBar>
-      <Drawer
-        variant="permanent"
-        sx={{
-          width: 238,
-          flexShrink: 0,
-          '& .MuiDrawer-paper': { width: 238, boxSizing: 'border-box', top: 64, borderRight: '1px solid #dce4e8' }
-        }}
-      >
-        <List sx={{ px: 1, py: 2 }}>
-          {nav.map((item) => (
-            <ListItemButton
-              key={item.to}
-              component={NavLink}
-              to={item.to}
-              sx={{
-                borderRadius: 1,
-                mb: 0.5,
-                '&.active': { bgcolor: '#e4f1f3', color: '#25636f' }
-              }}
-            >
-              <ListItemIcon sx={{ minWidth: 38 }}>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.label} />
-            </ListItemButton>
-          ))}
-        </List>
-      </Drawer>
-      <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 8, minWidth: 0 }}>
+
+      <Box component="nav" sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}>
+        <Drawer
+          variant="temporary"
+          open={mobileOpen}
+          onClose={() => setMobileOpen(false)}
+          ModalProps={{ keepMounted: true }}
+          sx={{
+            display: { xs: 'block', md: 'none' },
+            '& .MuiDrawer-paper': { width: drawerWidth }
+          }}
+        >
+          {drawer}
+        </Drawer>
+        <Drawer
+          variant="permanent"
+          open
+          sx={{
+            display: { xs: 'none', md: 'block' },
+            '& .MuiDrawer-paper': { width: drawerWidth, boxSizing: 'border-box' }
+          }}
+        >
+          {drawer}
+        </Drawer>
+      </Box>
+
+      <Box component="main" className="main-content" sx={{ width: { md: `calc(100% - ${drawerWidth}px)` } }}>
         <Outlet />
       </Box>
     </Box>

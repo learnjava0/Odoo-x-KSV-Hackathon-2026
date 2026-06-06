@@ -15,15 +15,36 @@ import ReportsPage from './pages/ReportsPage.jsx';
 const theme = createTheme({
   palette: {
     mode: 'light',
-    primary: { main: '#25636f' },
-    secondary: { main: '#b7791f' },
-    background: { default: '#f6f7fb' }
+    primary: { main: '#1b7a53', dark: '#155c43', contrastText: '#ffffff' },
+    secondary: { main: '#b77720' },
+    background: { default: '#f4f7f5', paper: '#ffffff' },
+    text: { primary: '#17211d', secondary: '#6d7a73' }
   },
-  shape: { borderRadius: 8 },
+  shape: { borderRadius: 9 },
   typography: {
     fontFamily: 'Inter, system-ui, sans-serif',
-    h4: { fontWeight: 700 },
-    h6: { fontWeight: 700 }
+    h4: { fontWeight: 800 },
+    h6: { fontWeight: 800 },
+    button: { fontWeight: 700, textTransform: 'none' }
+  },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: { boxShadow: 'none', borderRadius: 8 },
+        contained: { '&:hover': { boxShadow: 'none' } }
+      }
+    },
+    MuiTextField: {
+      defaultProps: { size: 'small' }
+    },
+    MuiOutlinedInput: {
+      styleOverrides: {
+        root: { background: '#fff' }
+      }
+    },
+    MuiTooltip: {
+      defaultProps: { arrow: true }
+    }
   }
 });
 
