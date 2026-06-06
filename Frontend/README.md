@@ -222,28 +222,28 @@ If not set, the Vite dev proxy handles `/api` automatically.
 ## Screenshots
 
 ### Dashboard
-![Dashboard](src/assets/dashboard.png)
+![Dashboard](https://raw.githubusercontent.com/learnjava0/Odoo-x-KSV-Hackathon-2026/main/Frontend/src/assets/dashboard.png)
 
 ### Vendors
-![Vendors](src/assets/vendore.png)
+![Vendors](https://raw.githubusercontent.com/learnjava0/Odoo-x-KSV-Hackathon-2026/main/Frontend/src/assets/vendore.png)
 
 ### Create RFQ
-![Create RFQ](src/assets/rfq_creation.png)
+![Create RFQ](https://raw.githubusercontent.com/learnjava0/Odoo-x-KSV-Hackathon-2026/main/Frontend/src/assets/rfq_creation.png)
 
 ### Submit Quotation
-![Submit Quotation](src/assets/quatation_submission.png)
+![Submit Quotation](https://raw.githubusercontent.com/learnjava0/Odoo-x-KSV-Hackathon-2026/main/Frontend/src/assets/quatation_submission.png)
 
 ### Quotation Comparison
-![Comparison](src/assets/quatation.png)
+![Comparison](https://raw.githubusercontent.com/learnjava0/Odoo-x-KSV-Hackathon-2026/main/Frontend/src/assets/quatation.png)
 
 ### Approval Workflow
-![Approvals](src/assets/approvals.png)
+![Approvals](https://raw.githubusercontent.com/learnjava0/Odoo-x-KSV-Hackathon-2026/main/Frontend/src/assets/approvals.png)
 
 ### PO & Invoices
-![Documents](src/assets/invoice.png)
+![Documents](https://raw.githubusercontent.com/learnjava0/Odoo-x-KSV-Hackathon-2026/main/Frontend/src/assets/invoice.png)
 
 ### Reports
-![Reports](src/assets/report.png)
+![Reports](https://raw.githubusercontent.com/learnjava0/Odoo-x-KSV-Hackathon-2026/main/Frontend/src/assets/report.png)
 
 ### Activity & Logs
-![Activity](src/assets/notification.png)
+![Activity](https://raw.githubusercontent.com/learnjava0/Odoo-x-KSV-Hackathon-2026/main/Frontend/src/assets/notification.png)

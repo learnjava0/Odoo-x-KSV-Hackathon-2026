@@ -248,19 +248,19 @@ Seeded by `DataSeeder` on first run:
 ## Screenshots
 
 ### Approval Workflow (Backend driven)
-![Approvals](../Frontend/src/assets/approvals.png)
+![Approvals](https://raw.githubusercontent.com/learnjava0/Odoo-x-KSV-Hackathon-2026/main/Frontend/src/assets/approvals.png)
 *4-step approval card — manager decision triggers PO + Invoice auto-generation via ApprovalService.*
 
 ### Purchase Orders & Invoices
-![Invoice](../Frontend/src/assets/invoice.png)
+![Invoice](https://raw.githubusercontent.com/learnjava0/Odoo-x-KSV-Hackathon-2026/main/Frontend/src/assets/invoice.png)
 *Expandable invoice rows with full CGST/SGST/IGST breakdown — tax type determined by vendor vs org state.*
 
 ### Activity & Audit Logs
-![Activity](../Frontend/src/assets/notification.png)
+![Activity](https://raw.githubusercontent.com/learnjava0/Odoo-x-KSV-Hackathon-2026/main/Frontend/src/assets/notification.png)
 *Immutable ActivityLog — every state transition recorded by ProcurementStateMachine.*
 
 ### Reports & Analytics
-![Reports](../Frontend/src/assets/report.png)
+![Reports](https://raw.githubusercontent.com/learnjava0/Odoo-x-KSV-Hackathon-2026/main/Frontend/src/assets/report.png)
 *Dashboard stats served by AnalyticsService from /api/v1/analytics/dashboard.*
 
 ### Database Entity Relationships
