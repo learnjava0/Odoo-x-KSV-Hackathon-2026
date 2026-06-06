@@ -1,130 +1,277 @@
+# VendorBridge — Backend
 
-# 🚀 README.md
-
-# 🏢 VendorBridge ERP: Enterprise Procurement & Vendor Management
-
-VendorBridge is an enterprise-grade, high-compliance B2B Procurement and Supply Chain Automation platform. Built with a highly secure architecture, the system mitigates manual operational friction by digitalizing the end-to-end procurement lifecycle—from vendor onboarding to transactional audit trails and automated tax compliance.
+Spring Boot REST API for the VendorBridge procurement platform. Handles authentication, RFQ lifecycle, quotation comparison, approval workflow, PO/invoice generation, tax calculation, PDF export, and audit logging.
 
 ---
 
-## 🏗️ Core Architectural Blueprint
+## Tech Stack
 
-The platform enforces strict decoupling of layers, guaranteeing that data mutations pass through authorization guards before hitting the relational database layer.
+| Component | Technology | Version |
+|---|---|---|
+| Language | Java | 17 |
+| Framework | Spring Boot | 3.2.4 |
+| Security | Spring Security + JWT (JJWT) | 6 / 0.12.5 |
+| ORM | Spring Data JPA + Hibernate | - |
+| Database | PostgreSQL | 14+ |
+| PDF Generation | OpenPDF | 1.3.32 |
+| API Docs | SpringDoc OpenAPI | 2.5.0 |
+| Build | Maven | 3.9+ |
 
-```text
-[ React Frontend / Ant Design v5 ]
-                 │
-                 ▼ (Stateless Bearer JWT Channel)
-[ Controller Layer / RBAC Guard ]     <-- Method-level security interceptors (@PreAuthorize)
-                 │
-                 ▼
- [ Relational Business Engines ]       <-- Deterministic State Machine & Algorithmic Scoring
-                 │
-                 ▼
-[ Spring Data JPA Data Access ]       <-- Atomic Transactions with Hibernate Auto-DDL Mapping
-                 │
-                 ▼
-[ PostgreSQL Relational Database ]    <-- ACID-compliant persistence layer
+---
 
+## Project Structure
+
+```
+backend/src/main/java/com/vendorbridge/
+│
+├── VendorBridgeApplication.java
+│
+├── config/
+│   ├── ApplicationConfig.java          Beans: PasswordEncoder, AuthManager, UserDetailsService
+│   ├── DataSeeder.java                 Seeds demo users and vendors on first run
+│   └── OpenApiConfig.java              Swagger UI bearer token setup
+│
+├── controller/
+│   ├── AuthController.java             POST /auth/signup, /login, /forgot-password
+│   ├── VendorController.java           GET /vendors, PATCH /vendors/{id}/status
+│   ├── RfqController.java              POST /rfqs, POST /rfqs/upload, GET /rfqs/{id}/compare
+│   ├── QuotationController.java        POST /quotations/submit/{rfqId}
+│   ├── ApprovalController.java         GET /approvals/pending, POST /approvals/{id}
+│   ├── InvoiceController.java          GET /procurement/invoice, GET /{id}/download, POST /{id}/send-email
+│   ├── AnalyticsController.java        GET /analytics/dashboard
+│   ├── ActivityController.java         GET /activities
+│   └── UserController.java             GET /users
+│
+├── service/
+│   ├── AuthService.java                User registration + JWT authentication
+│   ├── RfqService.java                 RFQ creation with vendor assignment
+│   ├── QuotationService.java           Quotation submission + comparison algorithm
+│   ├── ApprovalService.java            Approval/rejection + PO + Invoice auto-generation
+│   ├── AnalyticsService.java           Dashboard stats aggregation
+│   ├── ProcurementStateMachine.java    Validates and logs all state transitions
+│   ├── PdfGenerationService.java       OpenPDF invoice generator (in-memory stream)
+│   └── EmailNotificationService.java   Mock email trigger
+│
+├── model/
+│   ├── User.java                       email, password, role (implements UserDetails)
+│   ├── Vendor.java                     name, category, GST, contact, state, status, rating
+│   ├── Rfq.java                        title, productDetails, quantity, deadline, assignedVendors
+│   ├── Quotation.java                  rfq, vendor, price, deliveryTimeline, notes, status, remarks
+│   ├── PurchaseOrder.java              rfq, totalAmount, status, poNumber
+│   ├── Invoice.java                    PO, taxAmount, totalAmount, CGST/SGST/IGST, taxType, status
+│   ├── ActivityLog.java                eventType, entityType, entityId, remarks, actorName, timestamp
+│   ├── OrganizationProfile.java        Buyer org state for tax routing
+│   └── enums/
+│       ├── Role.java                   ADMIN, MANAGER, PROCUREMENT_OFFICER, VENDOR
+│       ├── ProcurementState.java       DRAFT, PUBLISHED, UNDER_REVIEW, PENDING_APPROVAL, APPROVED, REJECTED
+│       ├── VendorStatus.java           PENDING, APPROVED, REJECTED
+│       ├── PoStatus.java               ISSUED
+│       └── InvoiceStatus.java          UNPAID, PAID, CANCELLED
+│
+├── dto/
+│   ├── AuthRequest / AuthResponse / SignupRequest
+│   ├── RfqRequest                      title, productDetails, quantity, deadline, vendorIds, attachmentName
+│   ├── QuotationRequest                rfqId, price, deliveryTimeline, notes
+│   ├── ApprovalRequest                 purchaseOrderApproved, approvalRemark
+│   ├── QuotationComparisonDTO          vendorName, unitPrice, delivery, rating, totalWithTax, score, recommended
+│   └── DashboardStats                  pendingApprovals, activeRfqs, totalVendors, totalSpent, recentPOs/Invoices
+│
+├── security/
+│   ├── SecurityConfig.java             CORS, CSRF off, stateless, JWT filter registration
+│   ├── JwtAuthenticationFilter.java    Extracts + validates Bearer token per request
+│   ├── JwtService.java                 HMAC-SHA256 token generation and validation
+│   └── CustomAccessDeniedHandler.java  JSON 403 response with redirect hint
+│
+└── util/
+    └── EnglishNumberToWords.java       Converts invoice totals to words for PDF footer
 ```
 
 ---
 
-## 🏆 Core Technical Capabilities
+## Local Setup
 
-### 🧠 1. Machine-Guided Selection (Intelligent Quotation Engine)
+### Prerequisites
+- Java 17+, Maven 3.9+, PostgreSQL 14+
 
-Rather than relying on primitive "lowest price wins" logic, VendorBridge implements an automated decision-support matrix. Proposals are dynamically graded based on a weighted multi-variable execution factor:
-
-$$\text{Price-Performance Score} = \frac{\text{Vendor Historical Rating}}{\text{Quoted Price}}$$
-
-The response payloads are structured, sorted descending, and the optimal entry is dynamically flagged with an `isRecommended = true` badge—drastically shortening evaluation loops for procurement panels.
-
-### ⚙️ 2. Finite State Engine (`ProcurementStateMachine`)
-
-To eliminate procurement fraud and safeguard workflow continuity, the lifecycle of every core asset (RFQs, Bids, Approvals) is bound to a deterministic finite state machine.
-
-* **Transition Pipeline:** `DRAFT ➔ PUBLISHED ➔ UNDER_REVIEW ➔ PENDING_APPROVAL ➔ APPROVED ➔ FULFILLED`
-* **Workflow Guard:** Direct entity state updates via common setters are explicitly banned. If a rogue request attempts an illegal skip-state jump, the transaction automatically self-terminates, throwing a runtime exception.
-
-### 📊 3. Automated Localized Tax Router (India GST Compliance)
-
-The transactional calculation module automatically runs geographic cross-referencing between the verified `Vendor` source parameters and the local buyer `OrganizationProfile` location attributes:
-
-* **Intra-State Transactions:** Automatically tracks, computes, and splits variables into **9% CGST + 9% SGST**.
-* **Inter-State Transactions:** Automatically routes and maps a flat **18% IGST** allocation matrix.
-
-### 🛡️ 4. Immutable Audit Trails
-
-Every system transition, cryptographic payload signature, file-stream download, or dispatched notification triggers a background fork into the `ActivityLog` ecosystem.
-
-> [!WARNING]
-> **Immutable Data Isolation:** The activity ledger is strictly append-only. To protect audit integrity and ensure compliance tracking, data persistence models completely prohibit `UPDATE` or `DELETE` executions on this table.
-
-### 📄 5. Zero-Disk Document Streaming
-
-Approved purchase orders automatically compile into fully styled, corporate Tax Invoice layouts generated dynamically via `OpenPDF` in memory streams (`ByteArrayOutputStream`).
-
-* **Compliance Text Processing:** Financial totals are automatically processed through an `EnglishNumberToWords` string engine to map numeric metrics directly to corporate text footers (e.g., `150750` reads as *Rupees One Lakh Fifty Thousand Seven Hundred Fifty Only*).
-
----
-
-## 🛠️ Enterprise Technology Stack
-
-* **Application Core:** Java 17, Spring Boot 3.2.4
-* **Security & Guardrails:** Spring Security 6, Stateless JSON Web Tokens (JWT)
-* **Persistence Layer:** PostgreSQL, Hibernate ORM, HikariCP
-* **Reporting Utilities:** OpenPDF (Lowagie/iText engine fork)
-* **Contract Specification:** OpenAPI 3 / Swagger Engine (`springdoc-openapi`)
-
----
-
-## 🚀 Environment Setup & Deployment
-
-### 📋 Prerequisites
-
-Ensure a local PostgreSQL container or service instance is running and an active database target exists:
-
+### Database
 ```sql
 CREATE DATABASE vendorbridge;
-
 ```
 
-### 🏃 Running the Application
-
-Update the configurations inside `src/main/resources/application.yml` with your localized database credentials and run:
-
+### Run
 ```bash
-# Step 1: Clean build target and compile classes
-mvn clean compile
+cd backend
+./mvnw spring-boot:run
+# API: http://localhost:8088
+# Swagger: http://localhost:8088/swagger-ui.html
+```
 
-# Step 2: Fire up the embedded Tomcat server on Port 8080
-mvn spring-boot:run
+### Docker Compose
+```bash
+docker-compose up   # starts PostgreSQL + Spring Boot app
+```
 
+### Environment Variables
+```bash
+DB_URL=jdbc:postgresql://localhost:5432/vendorbridge
+DB_USERNAME=postgres
+DB_PASSWORD=yourpassword
+SERVER_PORT=8088
 ```
 
 ---
 
-## 🔌 API Documentation & Interactive Sandbox
+## API Reference
 
-The entire enterprise REST ecosystem is fully mapped under strict OpenAPI regulations. Use the sandbox playground link below to inspect payloads, execute mock queries, and review communication parameters live:
+### Authentication
+```
+POST  /api/v1/auth/signup                  Register user (public)
+POST  /api/v1/auth/login                   Get JWT token (public)
+POST  /api/v1/auth/forgot-password?email=  Password reset (public)
+```
 
-👉 **`http://localhost:8088/swagger-ui.html`**
+### Vendors
+```
+GET   /api/v1/vendors?q=              List/search vendors           [ADMIN, PROCUREMENT]
+GET   /api/v1/vendors/{id}            Get vendor                    [authenticated]
+PATCH /api/v1/vendors/{id}/status     Approve or block              [ADMIN]
+```
+
+### RFQs
+```
+POST  /api/v1/rfqs                    Create and publish RFQ        [PROCUREMENT]
+POST  /api/v1/rfqs/upload             Upload attachment             [PROCUREMENT]
+GET   /api/v1/rfqs                    List all RFQs                 [authenticated]
+GET   /api/v1/rfqs/{id}/quotations    List quotations for RFQ       [PROCUREMENT, MANAGER]
+GET   /api/v1/rfqs/{id}/compare       Comparison DTOs               [PROCUREMENT, MANAGER]
+```
+
+### Quotations
+```
+POST  /api/v1/quotations/submit/{id}  Submit quotation              [VENDOR]
+```
+
+### Approvals
+```
+GET   /api/v1/approvals/pending       Pending queue                 [MANAGER, ADMIN]
+POST  /api/v1/approvals/{id}          Approve or reject             [MANAGER]
+```
+
+### Documents
+```
+GET   /api/v1/procurement/invoice                    List invoices  [PROCUREMENT, ADMIN, MANAGER]
+GET   /api/v1/procurement/invoice/purchase-orders    List POs       [PROCUREMENT, ADMIN, MANAGER]
+GET   /api/v1/procurement/invoice/{id}/download      PDF download   [PROCUREMENT, ADMIN]
+POST  /api/v1/procurement/invoice/{id}/send-email    Email vendor   [PROCUREMENT, ADMIN]
+```
+
+### Analytics & Logs
+```
+GET   /api/v1/analytics/dashboard     Dashboard stats               [ADMIN, MANAGER]
+GET   /api/v1/activities              Recent 10 events              [ADMIN, MANAGER, PROCUREMENT]
+GET   /api/v1/users                   All users                     [ADMIN]
+```
 
 ---
 
-## 🔒 Security Matrix & Role-Based Access Control
+## Core Business Logic
 
-The stateless filtering pipeline wraps endpoints using method-level security guards to ensure absolute separation of duties.
+### Procurement State Machine
 
-| System Context / Endpoint Route | Authorized Role Profiles | Violation Handling |
-| --- | --- | --- |
-| `POST /api/v1/rfqs/**` | `PROCUREMENT_OFFICER`, `ADMIN` | Intercepted 403 Access Breach |
-| `POST /api/v1/quotations/**` | `VENDOR` | Intercepted 403 Access Breach |
-| `POST /api/v1/approvals/**` | `MANAGER` | Intercepted 403 Access Breach |
+`ProcurementStateMachine.transitionState()` — called on every lifecycle change:
+1. Validates transition is legal (no state skipping)
+2. Appends an `ActivityLog` entry (immutable — no UPDATE or DELETE ever)
+3. Throws `RuntimeException` on illegal jump
 
-> [!NOTE]
-> **Elegant Failure Handling:** When a user attempts to cross-reach beyond their role scope, the `CustomAccessDeniedHandler` converts the raw Spring Security exception into a pristine JSON response payload containing a user-friendly error string and an explicit `/dashboard` redirect instruction tailored specifically for frontend Toast alert engines.
+```
+RFQ:        DRAFT → PUBLISHED → UNDER_REVIEW
+Quotation:  (created) → UNDER_REVIEW → PENDING_APPROVAL → APPROVED | REJECTED
+```
 
+### Quotation Comparison Algorithm
 
+```
+pricePerformanceScore = vendorRating / unitPrice
 
+Sorting (sortBy param):
+  score        — descending score (default)
+  price        — ascending price
+  deliverytime — ascending delivery days
+  rating       — descending vendor rating
+
+Recommendation badge: highest score → isRecommended = true
+```
+
+### Tax Calculation
+
+```
+if vendor.state == organizationProfile.state:
+    CGST = base × 9%,  SGST = base × 9%   (taxType = CGST_SGST)
+else:
+    IGST = base × 18%                      (taxType = IGST)
+```
+
+### Auto-generated Document Numbers
+```
+Purchase Order:  VB-PO-{YEAR}-{sequence}    e.g. VB-PO-2025-0042
+Invoice:         VB-INV-{YEAR}-{prefix}     e.g. VB-INV-2025-a3f1
+```
+
+---
+
+## Security
+
+| Concern | Implementation |
+|---|---|
+| Authentication | Stateless JWT, HMAC-SHA256, 24h expiry |
+| Authorisation | Method-level `@PreAuthorize` on every endpoint |
+| Password storage | BCrypt via Spring Security |
+| CORS | Allows localhost:5173, methods: GET/POST/PUT/PATCH/DELETE/OPTIONS |
+| CSRF | Disabled (stateless API) |
+| 403 response | JSON with message + `/dashboard` redirect hint |
+
+---
+
+## Demo Accounts
+
+Seeded by `DataSeeder` on first run:
+
+| Role | Email | Password |
+|---|---|---|
+| Admin | admin@vendorbridge.com | admin123 |
+| Manager | manager@vendorbridge.com | manager123 |
+| Procurement Officer | procurement@vendorbridge.com | procurement123 |
+| Vendor | vendor@vendorbridge.com | vendor123 |
+
+---
+
+## Screenshots
+
+### Approval Workflow (Backend driven)
+![Approvals](../Frontend/src/assets/approvals.png)
+*4-step approval card — manager decision triggers PO + Invoice auto-generation via ApprovalService.*
+
+### Purchase Orders & Invoices
+![Invoice](../Frontend/src/assets/invoice.png)
+*Expandable invoice rows with full CGST/SGST/IGST breakdown — tax type determined by vendor vs org state.*
+
+### Activity & Audit Logs
+![Activity](../Frontend/src/assets/notification.png)
+*Immutable ActivityLog — every state transition recorded by ProcurementStateMachine.*
+
+### Reports & Analytics
+![Reports](../Frontend/src/assets/report.png)
+*Dashboard stats served by AnalyticsService from /api/v1/analytics/dashboard.*
+
+### Database Entity Relationships
+```
+users ──< vendors              (one user → one vendor profile)
+users ──< rfqs                 (created_by)
+rfqs  ──< rfq_assigned_vendors >── vendors  (many-to-many)
+rfqs  ──< quotations
+vendors ──< quotations
+quotations ── purchase_orders  (one-to-one on approval)
+purchase_orders ── invoices    (one-to-one auto-generated)
+activity_logs                  (append-only, actor = user)
+organization_profile           (single-row buyer org config)
+```
