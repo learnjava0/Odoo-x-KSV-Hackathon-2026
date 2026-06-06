@@ -1,13 +1,13 @@
-package com.odoo.Odoo;
+package com.vendorbridge;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class OdooApplicationTests {
+class VendorBridgeApplicationTests {
 
-	@Test
-	void contextLoads() {
-	}
+    @Test
+    void contextLoads() {
+    }
 
 }
