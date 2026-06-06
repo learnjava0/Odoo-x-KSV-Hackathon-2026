@@ -1,47 +1,89 @@
 import { Box, Typography } from '@mui/material';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { useEffect, useState } from 'react';
+import AnimatedNumber from '../components/AnimatedNumber.jsx';
+import ChartTooltip from '../components/ChartTooltip.jsx';
+import { StateContent } from '../components/DataStates.jsx';
 import PageHeader from '../components/PageHeader.jsx';
 import { api } from '../services/api.js';
+import { formatCurrency } from '../utils/formatters.js';
 
 export default function ReportsPage() {
   const [vendors, setVendors] = useState([]);
   const [cost, setCost] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    api.get('/api/reports/vendor-performance').then(({ data }) => setVendors(data));
-    api.get('/api/reports/procurement-cost').then(({ data }) => setCost(data));
-  }, []);
+  const load = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const [vendorResponse, costResponse] = await Promise.all([
+        api.get('/api/reports/vendor-performance'),
+        api.get('/api/reports/procurement-cost')
+      ]);
+      setVendors(vendorResponse.data);
+      setCost(costResponse.data);
+    } catch {
+      setError('Reporting data is temporarily unavailable.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { load(); }, []);
 
   return (
     <>
       <PageHeader title="Reports" subtitle="Vendor performance, procurement cost, spending trend, and approval metrics." />
       <div className="page-grid">
-        <div className="metric-card">
+        <div className="metric-card stagger-enter">
           <Typography color="text.secondary">Quarter</Typography>
           <Typography variant="h5">{cost.quarter ?? 'Q2 2026'}</Typography>
+          <Typography className="metric-context">Current reporting period</Typography>
         </div>
-        <div className="metric-card">
+        <div className="metric-card stagger-enter" style={{ '--enter-delay': '70ms' }}>
           <Typography color="text.secondary">Actual spend</Typography>
-          <Typography variant="h5">{cost.actual ?? 0}</Typography>
+          <Typography variant="h5"><AnimatedNumber value={cost.actual} formatter={formatCurrency} /></Typography>
+          <Typography className="metric-context">Committed procurement cost</Typography>
         </div>
-        <div className="metric-card">
+        <div className="metric-card stagger-enter" style={{ '--enter-delay': '140ms' }}>
           <Typography color="text.secondary">Savings</Typography>
-          <Typography variant="h5">{cost.savings ?? 0}</Typography>
+          <Typography variant="h5"><AnimatedNumber value={cost.savings} formatter={formatCurrency} /></Typography>
+          <Typography className="metric-context">Value retained through sourcing</Typography>
         </div>
       </div>
       <Box className="data-card chart-card">
-        <Typography className="chart-card-title">Vendor performance</Typography>
-        <ResponsiveContainer width="100%" height="82%">
-          <BarChart data={vendors} margin={{ top: 5, right: 8, left: -12, bottom: 0 }}>
-            <CartesianGrid stroke="#e4ebe7" strokeDasharray="4 4" vertical={false} />
-            <XAxis dataKey="vendor" axisLine={false} tickLine={false} tick={{ fill: '#78857e', fontSize: 12 }} />
-            <YAxis axisLine={false} tickLine={false} tick={{ fill: '#78857e', fontSize: 12 }} />
-            <Tooltip />
-            <Bar dataKey="score" fill="#1b7a53" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="onTime" fill="#d6a251" radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
+        <Box className="section-heading">
+          <Box>
+            <Typography className="chart-card-title">Vendor performance</Typography>
+            <Typography className="section-subtitle">Compare overall score with on-time delivery performance.</Typography>
+          </Box>
+          <Box className="chart-legend">
+            <span className="score" /> Score
+            <span className="delivery" /> On time
+          </Box>
+        </Box>
+        {loading || error || !vendors.length ? (
+          <StateContent
+            loading={loading}
+            error={error}
+            onRetry={load}
+            title="No vendor performance yet"
+            description="Performance metrics will appear after vendors complete orders."
+          />
+        ) : (
+          <ResponsiveContainer width="100%" height="76%">
+            <BarChart data={vendors} margin={{ top: 12, right: 8, left: -12, bottom: 0 }}>
+              <CartesianGrid stroke="#e4ebe7" strokeDasharray="4 4" vertical={false} />
+              <XAxis dataKey="vendor" axisLine={false} tickLine={false} tick={{ fill: '#78857e', fontSize: 12 }} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fill: '#78857e', fontSize: 12 }} />
+              <Tooltip content={<ChartTooltip />} cursor={{ fill: '#f2f7f4' }} />
+              <Bar dataKey="score" name="Score" fill="#1b7a53" radius={[4, 4, 0, 0]} animationDuration={800} />
+              <Bar dataKey="onTime" name="On time" fill="#d6a251" radius={[4, 4, 0, 0]} animationDuration={1000} />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
       </Box>
     </>
   );

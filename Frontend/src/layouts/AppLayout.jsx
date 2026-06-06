@@ -144,7 +144,9 @@ export default function AppLayout() {
       </Box>
 
       <Box component="main" className="main-content" sx={{ width: { md: `calc(100% - ${drawerWidth}px)` } }}>
-        <Outlet />
+        <Box key={location.pathname} className="route-enter">
+          <Outlet />
+        </Box>
       </Box>
     </Box>
   );

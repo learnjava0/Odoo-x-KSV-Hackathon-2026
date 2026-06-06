@@ -16,18 +16,22 @@ const demoUsers = [
 export default function LoginPage() {
   const { register, handleSubmit, setValue } = useForm({ defaultValues: { email: demoUsers[1], password: 'password' } });
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const onSubmit = async (values) => {
     try {
+      setSubmitting(true);
       setError('');
       const { data } = await api.post('/api/auth/login', values);
       dispatch(setCredentials({ token: data.token, user: { name: data.name, email: data.email, role: data.role } }));
       navigate('/');
     } catch {
       setError('Login failed. Use one of the seeded accounts with password: password.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -68,6 +72,30 @@ export default function LoginPage() {
                 <div className="text-sm">{item.label}</div>
               </div>
             ))}
+          </Box>
+        </Box>
+        <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ p: { xs: 3.5, md: 6 }, display: 'grid', alignContent: 'center', gap: 2 }}>
+          <Box sx={{ mb: 1 }}>
+            <Typography variant="h5" sx={{ fontWeight: 800, letterSpacing: '-.025em' }}>Welcome back</Typography>
+            <Typography color="text.secondary" sx={{ mt: 0.7, fontSize: '.84rem' }}>Sign in to continue to your workspace.</Typography>
+          </Box>
+          {error && <Alert severity="error">{error}</Alert>}
+          <TextField label="Email" {...register('email', { required: true })} />
+          <TextField label="Password" type="password" {...register('password', { required: true })} />
+          <Button type="submit" variant="contained" size="large" disabled={submitting} sx={{ mt: 0.5 }}>
+            {submitting ? 'Signing in...' : 'Sign in'}
+          </Button>
+          <Typography color="text.secondary" sx={{ textAlign: 'center', fontSize: '.68rem', mt: 1 }}>Demo accounts</Typography>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 0.5 }}>
+            {demoUsers.map((email) => (
+              <Button key={email} variant="text" size="small" onClick={() => setValue('email', email)} sx={{ fontSize: '.67rem' }}>
+                {email.split('@')[0]}
+              </Button>
+            ))}
+          </Box>
+        </Box>
+      </Paper>
+    </Box>
           </div>
 
           <div className="absolute right-6 top-6 opacity-10">

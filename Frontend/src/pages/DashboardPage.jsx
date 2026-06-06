@@ -9,15 +9,32 @@ import {
 import { Box, Button, Typography } from '@mui/material';
 import { Link } from 'react-router-dom';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import AnimatedNumber from '../components/AnimatedNumber.jsx';
+import ChartTooltip from '../components/ChartTooltip.jsx';
+import { StateContent } from '../components/DataStates.jsx';
 import PageHeader from '../components/PageHeader.jsx';
+import WorkflowTracker from '../components/WorkflowTracker.jsx';
 import { api } from '../services/api.js';
 
 export default function DashboardPage() {
   const [summary, setSummary] = useState({ monthlySpend: [] });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    api.get('/api/dashboard/summary').then(({ data }) => setSummary(data));
-  }, []);
+  const load = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const { data } = await api.get('/api/dashboard/summary');
+      setSummary({ monthlySpend: [], ...data });
+    } catch {
+      setError('Check that the API is running, then try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { load(); }, []);
 
   const metrics = [
     { label: 'Active RFQs', value: summary.activeRfqs ?? 0, icon: <DescriptionOutlined />, note: 'Open sourcing events' },
@@ -35,17 +52,18 @@ export default function DashboardPage() {
         action={<Button component={Link} to="/rfqs" variant="contained">Manage RFQs</Button>}
       />
       <div className="page-grid">
-        {metrics.map((metric) => (
-          <div className="metric-card" key={metric.label}>
+        {metrics.map((metric, index) => (
+          <div className="metric-card stagger-enter" key={metric.label} style={{ '--enter-delay': `${index * 70}ms` }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
               <Typography color="text.secondary" variant="body2">{metric.label}</Typography>
-              <Box sx={{ color: 'primary.main', display: 'flex' }}>{metric.icon}</Box>
+              <Box className="metric-icon">{metric.icon}</Box>
             </Box>
-            <Typography variant="h4" sx={{ mt: 1 }}>{metric.value}</Typography>
+            <Typography variant="h4" sx={{ mt: 1 }}><AnimatedNumber value={metric.value} /></Typography>
             <Typography color="text.secondary" sx={{ mt: 0.5, fontSize: '0.72rem' }}>{metric.note}</Typography>
           </div>
         ))}
       </div>
+      <WorkflowTracker summary={summary} />
       <Box className="data-card chart-card">
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
           <Box>
@@ -56,21 +74,40 @@ export default function DashboardPage() {
           </Box>
           <Button component={Link} to="/reports" size="small">View reports</Button>
         </Box>
-        <ResponsiveContainer width="100%" height="78%">
-          <AreaChart data={summary.monthlySpend} margin={{ top: 10, right: 8, left: -12, bottom: 0 }}>
-            <defs>
-              <linearGradient id="spendFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#2f966a" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#2f966a" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid stroke="#e4ebe7" strokeDasharray="4 4" vertical={false} />
-            <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#78857e', fontSize: 12 }} />
-            <YAxis axisLine={false} tickLine={false} tick={{ fill: '#78857e', fontSize: 12 }} />
-            <Tooltip />
-            <Area type="monotone" dataKey="amount" stroke="#1b7a53" strokeWidth={2.5} fill="url(#spendFill)" />
-          </AreaChart>
-        </ResponsiveContainer>
+        {loading || error || !summary.monthlySpend.length ? (
+          <StateContent
+            loading={loading}
+            error={error}
+            onRetry={load}
+            title="No spending history yet"
+            description="Monthly spend will be charted after purchase orders and invoices are created."
+          />
+        ) : (
+          <ResponsiveContainer width="100%" height="78%">
+            <AreaChart data={summary.monthlySpend} margin={{ top: 10, right: 8, left: -12, bottom: 0 }}>
+              <defs>
+                <linearGradient id="spendFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#2f966a" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#2f966a" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid stroke="#e4ebe7" strokeDasharray="4 4" vertical={false} />
+              <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#78857e', fontSize: 12 }} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fill: '#78857e', fontSize: 12 }} />
+              <Tooltip content={<ChartTooltip currency />} cursor={{ stroke: '#a9cdb9', strokeDasharray: '4 4' }} />
+              <Area
+                type="monotone"
+                dataKey="amount"
+                name="Spend"
+                stroke="#1b7a53"
+                strokeWidth={2.5}
+                fill="url(#spendFill)"
+                animationDuration={900}
+                activeDot={{ r: 5, strokeWidth: 3, stroke: '#dff3e7', fill: '#1b7a53' }}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        )}
       </Box>
     </>
   );
