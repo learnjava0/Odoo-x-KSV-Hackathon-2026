@@ -1,6 +1,6 @@
 package com.vendorbridge.model;
 
-import com.vendorbridge.model.enums.RfqStatus;
+import com.vendorbridge.model.enums.ProcurementState;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -29,7 +29,7 @@ public class Rfq {
     private LocalDate deadline;
 
     @Enumerated(EnumType.STRING)
-    private RfqStatus status = RfqStatus.ACTIVE;
+    private ProcurementState status;
 
     @ManyToOne
     @JoinColumn(name = "created_by_user_id", referencedColumnName = "id")

@@ -1,5 +1,6 @@
 package com.vendorbridge.controller;
 
+import com.vendorbridge.dto.ApprovalRequest;
 import com.vendorbridge.model.Invoice;
 import com.vendorbridge.service.ApprovalService;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +17,8 @@ public class ApprovalController {
 
     @PostMapping("/{quotationId}")
     @PreAuthorize("hasRole('MANAGER')")
-    public ResponseEntity<Invoice> approveQuotation(@PathVariable Long quotationId) {
-        return ResponseEntity.ok(approvalService.approveQuotation(quotationId));
+    public ResponseEntity<Invoice> initiateProcurementApproval(@PathVariable Long quotationId, @RequestBody ApprovalRequest approvalDecisionRequest) {
+        Invoice vendorInvoice = approvalService.initiateProcurementApproval(quotationId, approvalDecisionRequest);
+        return vendorInvoice != null ? ResponseEntity.ok(vendorInvoice) : ResponseEntity.noContent().build();
     }
 }

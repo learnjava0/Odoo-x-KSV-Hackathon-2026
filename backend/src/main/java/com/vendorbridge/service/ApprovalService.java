@@ -1,18 +1,26 @@
 package com.vendorbridge.service;
 
+import com.vendorbridge.dto.ApprovalRequest;
 import com.vendorbridge.model.Invoice;
+import com.vendorbridge.model.OrganizationProfile;
 import com.vendorbridge.model.PurchaseOrder;
 import com.vendorbridge.model.Quotation;
+import com.vendorbridge.model.User;
+import com.vendorbridge.model.Vendor;
 import com.vendorbridge.model.enums.InvoiceStatus;
 import com.vendorbridge.model.enums.PoStatus;
-import com.vendorbridge.model.enums.QuotationStatus;
+import com.vendorbridge.model.enums.ProcurementState;
 import com.vendorbridge.repository.InvoiceRepository;
+import com.vendorbridge.repository.OrganizationProfileRepository;
 import com.vendorbridge.repository.PurchaseOrderRepository;
 import com.vendorbridge.repository.QuotationRepository;
+import com.vendorbridge.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Service
@@ -24,44 +32,80 @@ public class ApprovalService {
     private final InvoiceRepository invoiceRepository;
     private final PdfGenerationService pdfGenerationService;
     private final EmailNotificationService emailNotificationService;
+    private final UserRepository userRepository;
+    private final OrganizationProfileRepository organizationProfileRepository;
+    private final ProcurementStateMachine stateMachine;
 
     @Transactional
-    public Invoice approveQuotation(Long quotationId) {
-        Quotation quotation = quotationRepository.findById(quotationId)
-                .orElseThrow(() -> new RuntimeException("Quotation not found"));
+    public Invoice initiateProcurementApproval(Long quotationId, ApprovalRequest approvalDecisionRequest) {
+        String approvingManagerEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        User managerProfile = userRepository.findByEmail(approvingManagerEmail).orElse(null);
 
-        // 1. Update Quotation Status
-        quotation.setStatus(QuotationStatus.APPROVED);
-        quotationRepository.save(quotation);
+        Quotation vendorQuotation = quotationRepository.findById(quotationId)
+                .orElseThrow(() -> new RuntimeException("Vendor quotation not found"));
 
-        // 2. Generate Purchase Order
-        PurchaseOrder po = new PurchaseOrder();
-        po.setRfq(quotation.getRfq());
-        po.setTotalAmount(quotation.getPrice());
-        po.setStatus(PoStatus.ISSUED);
-        po.setPoNumber("PO-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
-        po = purchaseOrderRepository.save(po);
+        vendorQuotation.setRemarks(approvalDecisionRequest.getApprovalRemark());
 
-        // 3. Generate Invoice & Calculate 18% GST Tax
-        Invoice invoice = new Invoice();
-        invoice.setPurchaseOrder(po);
+        if (!approvalDecisionRequest.isPurchaseOrderApproved()) {
+            stateMachine.transitionState(vendorQuotation.getStatus(), ProcurementState.REJECTED, managerProfile, "QUOTATION", vendorQuotation.getId().toString(), approvalDecisionRequest.getApprovalRemark(), "APPROVAL_REJECTED");
+            vendorQuotation.setStatus(ProcurementState.REJECTED);
+            quotationRepository.save(vendorQuotation);
+            return null;
+        }
+
+        stateMachine.transitionState(vendorQuotation.getStatus(), ProcurementState.APPROVED, managerProfile, "QUOTATION", vendorQuotation.getId().toString(), approvalDecisionRequest.getApprovalRemark(), "APPROVAL_GRANTED");
+        vendorQuotation.setStatus(ProcurementState.APPROVED);
+        quotationRepository.save(vendorQuotation);
+
+        // PO Number Format: VB-PO-{YEAR}-{4-digit-seq}
+        String poNumber = "VB-PO-" + LocalDate.now().getYear() + "-" + String.format("%04d", (int)(Math.random() * 10000));
         
-        double taxAmount = quotation.getPrice() * 0.18;
-        invoice.setTaxAmount(taxAmount);
-        invoice.setTotalAmount(quotation.getPrice() + taxAmount);
-        invoice.setStatus(InvoiceStatus.UNPAID);
-        invoice = invoiceRepository.save(invoice);
+        PurchaseOrder generatedPurchaseOrder = new PurchaseOrder();
+        generatedPurchaseOrder.setRfq(vendorQuotation.getRfq());
+        generatedPurchaseOrder.setTotalAmount(vendorQuotation.getPrice());
+        generatedPurchaseOrder.setStatus(PoStatus.ISSUED);
+        generatedPurchaseOrder.setPoNumber(poNumber);
+        generatedPurchaseOrder = purchaseOrderRepository.save(generatedPurchaseOrder);
+        
+        stateMachine.transitionState(ProcurementState.APPROVED, ProcurementState.APPROVED, managerProfile, "PO", generatedPurchaseOrder.getId().toString(), "PO Generated", "PO_GENERATED");
 
-        // 4. Generate PDF and Trigger Mock Email
-        byte[] pdf = pdfGenerationService.generateInvoicePdf(invoice);
+        Invoice vendorInvoice = new Invoice();
+        vendorInvoice.setPurchaseOrder(generatedPurchaseOrder);
+        
+        String invoiceNumber = "VB-INV-" + LocalDate.now().getYear() + "-" + String.format("%04d", (int)(Math.random() * 10000));
+        vendorInvoice.setInvoiceNumber(invoiceNumber);
+        
+        Vendor vendor = vendorQuotation.getVendor();
+        OrganizationProfile org = organizationProfileRepository.findAll().stream().findFirst().orElse(null);
+        
+        if (org != null && vendor != null && vendor.getState() != null && vendor.getState().equalsIgnoreCase(org.getState())) {
+            double cgst = vendorQuotation.getPrice() * 0.09;
+            double sgst = vendorQuotation.getPrice() * 0.09;
+            vendorInvoice.setTaxType("CGST_SGST");
+            vendorInvoice.setCgstAmount(cgst);
+            vendorInvoice.setSgstAmount(sgst);
+            vendorInvoice.setTaxAmount(cgst + sgst);
+        } else {
+            double igst = vendorQuotation.getPrice() * 0.18;
+            vendorInvoice.setTaxType("IGST");
+            vendorInvoice.setIgstAmount(igst);
+            vendorInvoice.setTaxAmount(igst);
+        }
+        
+        vendorInvoice.setTotalAmount(vendorQuotation.getPrice() + vendorInvoice.getTaxAmount());
+        vendorInvoice.setStatus(InvoiceStatus.UNPAID);
+        vendorInvoice = invoiceRepository.save(vendorInvoice);
+
+        byte[] invoicePdfDocument = pdfGenerationService.generateInvoicePdf(vendorInvoice);
         
         String vendorEmail = "vendor@example.com";
-        if (quotation.getVendor() != null && quotation.getVendor().getUser() != null) {
-            vendorEmail = quotation.getVendor().getUser().getEmail();
+        if (vendorQuotation.getVendor() != null && vendorQuotation.getVendor().getUser() != null) {
+            vendorEmail = vendorQuotation.getVendor().getUser().getEmail();
         }
                 
-        emailNotificationService.sendInvoiceEmail(invoice.getId(), vendorEmail, pdf);
+        emailNotificationService.sendInvoiceEmail(vendorInvoice.getId(), vendorEmail, invoicePdfDocument);
+        stateMachine.transitionState(ProcurementState.APPROVED, ProcurementState.APPROVED, managerProfile, "INVOICE", vendorInvoice.getId().toString(), "Invoice PDF Generated and Emailed", "INVOICE_SENT");
 
-        return invoice;
+        return vendorInvoice;
     }
 }

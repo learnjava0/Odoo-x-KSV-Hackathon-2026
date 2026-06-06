@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 public class QuotationRequest {
     private Long rfqId;
     private Double price;
-    private String deliveryTimeline;
+    private Integer deliveryTimeline;
     private String notes;
 }

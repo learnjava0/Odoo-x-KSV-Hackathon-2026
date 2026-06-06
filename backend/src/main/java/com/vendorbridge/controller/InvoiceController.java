@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -18,11 +19,12 @@ public class InvoiceController {
     private final PdfGenerationService pdfGenerationService;
 
     @GetMapping("/{id}/download")
-    public ResponseEntity<byte[]> downloadInvoicePdf(@PathVariable Long id) {
-        Invoice invoice = invoiceRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Invoice not found"));
+    @PreAuthorize("hasAnyRole('PROCUREMENT_OFFICER', 'ADMIN')")
+    public ResponseEntity<byte[]> downloadVendorInvoiceDocument(@PathVariable Long id) {
+        Invoice vendorInvoice = invoiceRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Vendor invoice missing from registry"));
 
-        byte[] pdfBytes = pdfGenerationService.generateInvoicePdf(invoice);
+        byte[] invoicePdfDocument = pdfGenerationService.generateInvoicePdf(vendorInvoice);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);
@@ -30,6 +32,16 @@ public class InvoiceController {
 
         return ResponseEntity.ok()
                 .headers(headers)
-                .body(pdfBytes);
+                .body(invoicePdfDocument);
+    }
+
+    @PostMapping("/{id}/send-email")
+    @PreAuthorize("hasAnyRole('PROCUREMENT_OFFICER', 'ADMIN')")
+    public ResponseEntity<String> dispatchInvoiceToVendor(@PathVariable Long id) {
+        Invoice vendorInvoice = invoiceRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Vendor invoice missing from registry"));
+        // Trigger mock email service directly
+        System.out.println("Invoice #" + id + " manually triggered for email delivery to vendor.");
+        return ResponseEntity.ok("Email successfully dispatched to the registered vendor.");
     }
 }

@@ -22,18 +22,27 @@ public class RfqController {
 
     @PostMapping
     @PreAuthorize("hasRole('PROCUREMENT_OFFICER')")
-    public ResponseEntity<Rfq> createRfq(@RequestBody RfqRequest request) {
-        return ResponseEntity.ok(rfqService.createRfq(request));
+    public ResponseEntity<Rfq> publishProcurementRFQ(@RequestBody RfqRequest rfqCreationRequest) {
+        return ResponseEntity.ok(rfqService.publishProcurementRFQ(rfqCreationRequest));
     }
 
     @GetMapping
-    public ResponseEntity<List<Rfq>> getAllRfqs() {
-        return ResponseEntity.ok(rfqService.getAllRfqs());
+    public ResponseEntity<List<Rfq>> fetchAllProcurementRFQs() {
+        return ResponseEntity.ok(rfqService.fetchAllProcurementRFQs());
     }
 
     @GetMapping("/{id}/quotations")
-    public ResponseEntity<List<Quotation>> getQuotationsForRfq(@PathVariable Long id) {
-        // Returns the quotations sorted by price as requested
-        return ResponseEntity.ok(quotationService.getQuotationsForRfq(id));
+    @PreAuthorize("hasAnyRole('PROCUREMENT_OFFICER', 'MANAGER')")
+    public ResponseEntity<List<Quotation>> fetchVendorQuotationsForRFQ(@PathVariable Long id) {
+        // Vendors should not see competitor pricing before submitting.
+        // Only show comparison data to Procurement Officers and above.
+        // The service layer sorts this by lowest price to eliminate bias.
+        return ResponseEntity.ok(quotationService.fetchVendorQuotationsForRFQ(id));
+    }
+
+    @GetMapping("/{id}/compare")
+    @PreAuthorize("hasAnyRole('PROCUREMENT_OFFICER', 'MANAGER')")
+    public ResponseEntity<?> compareQuotations(@PathVariable Long id, @RequestParam(required = false) String sortBy) {
+        return ResponseEntity.ok(quotationService.compareQuotations(id, sortBy));
     }
 }

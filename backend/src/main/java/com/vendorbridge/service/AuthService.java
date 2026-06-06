@@ -28,45 +28,49 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
 
     @Transactional
-    public AuthResponse signup(SignupRequest request) {
-        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new RuntimeException("Email already in use");
+    public AuthResponse registerSystemUser(SignupRequest registrationPayload) {
+        if (userRepository.findByEmail(registrationPayload.getEmail()).isPresent()) {
+            throw new RuntimeException("Email already active in procurement registry");
         }
 
-        User user = new User();
-        user.setEmail(request.getEmail());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setRole(request.getRole());
-        user = userRepository.save(user);
+        User registeredUser = new User();
+        registeredUser.setEmail(registrationPayload.getEmail());
+        registeredUser.setPassword(passwordEncoder.encode(registrationPayload.getPassword()));
+        registeredUser.setRole(registrationPayload.getRole());
+        registeredUser = userRepository.save(registeredUser);
 
-        // If a vendor signs up, create the corresponding vendor entity
-        if (request.getRole() == Role.VENDOR) {
-            Vendor vendor = new Vendor();
-            vendor.setUser(user);
-            vendor.setName(request.getName());
-            vendor.setCategory(request.getCategory());
-            vendor.setGstNumber(request.getGstNumber());
-            vendor.setContactDetails(request.getContactDetails());
-            vendor.setStatus(VendorStatus.PENDING);
-            vendorRepository.save(vendor);
+        // Procurement Compliance: A vendor role must inherently generate a strict vendor profile
+        // linked to the core identity to prevent orphaned users participating in RFQs.
+        if (registrationPayload.getRole() == Role.VENDOR) {
+            Vendor registeredVendorProfile = new Vendor();
+            registeredVendorProfile.setUser(registeredUser);
+            registeredVendorProfile.setName(registrationPayload.getName());
+            registeredVendorProfile.setCategory(registrationPayload.getCategory());
+            registeredVendorProfile.setGstNumber(registrationPayload.getGstNumber());
+            registeredVendorProfile.setContactDetails(registrationPayload.getContactDetails());
+            
+            // Vendors must be manually vetted by procurement officers before they can bid.
+            // This is non-negotiable for supply chain security.
+            registeredVendorProfile.setStatus(VendorStatus.PENDING);
+            vendorRepository.save(registeredVendorProfile);
         }
 
-        String jwtToken = jwtService.generateToken(user);
+        String jwtToken = jwtService.generateToken(registeredUser);
         return new AuthResponse(jwtToken);
     }
 
-    public AuthResponse login(AuthRequest request) {
+    public AuthResponse authenticateSystemUser(AuthRequest authenticationPayload) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword()
+                        authenticationPayload.getEmail(),
+                        authenticationPayload.getPassword()
                 )
         );
 
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User registeredUser = userRepository.findByEmail(authenticationPayload.getEmail())
+                .orElseThrow(() -> new RuntimeException("Procurement identity mismatch"));
 
-        String jwtToken = jwtService.generateToken(user);
+        String jwtToken = jwtService.generateToken(registeredUser);
         return new AuthResponse(jwtToken);
     }
 }

@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface RfqRepository extends JpaRepository<Rfq, Long> {
+    long countByStatus(com.vendorbridge.model.enums.ProcurementState status);
 }

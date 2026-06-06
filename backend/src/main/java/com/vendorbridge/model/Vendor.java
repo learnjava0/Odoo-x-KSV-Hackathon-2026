@@ -24,6 +24,8 @@ public class Vendor {
     private String gstNumber;
     
     private String contactDetails;
+    private String state;
+    private String address;
 
     @Enumerated(EnumType.STRING)
     private VendorStatus status = VendorStatus.PENDING;

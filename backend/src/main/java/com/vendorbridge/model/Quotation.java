@@ -1,6 +1,6 @@
 package com.vendorbridge.model;
 
-import com.vendorbridge.model.enums.QuotationStatus;
+import com.vendorbridge.model.enums.ProcurementState;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -27,11 +27,14 @@ public class Quotation {
 
     private Double price;
     
-    private String deliveryTimeline;
+    private Integer deliveryTimeline; // in days
     
     @Column(columnDefinition = "TEXT")
     private String notes;
 
     @Enumerated(EnumType.STRING)
-    private QuotationStatus status = QuotationStatus.SUBMITTED;
+    private ProcurementState status;
+    
+    @Column(columnDefinition = "TEXT")
+    private String remarks; // Manager approval/rejection remarks
 }

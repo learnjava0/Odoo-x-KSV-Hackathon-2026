@@ -15,9 +15,10 @@ public class QuotationController {
 
     private final QuotationService quotationService;
 
-    @PostMapping
+    @PostMapping("/submit/{rfqId}")
     @PreAuthorize("hasRole('VENDOR')")
-    public ResponseEntity<Quotation> submitQuotation(@RequestBody QuotationRequest request) {
-        return ResponseEntity.ok(quotationService.submitQuotation(request));
+    public ResponseEntity<Quotation> submitVendorQuotation(@PathVariable Long rfqId, @RequestBody QuotationRequest quotationSubmissionRequest) {
+        quotationSubmissionRequest.setRfqId(rfqId);
+        return ResponseEntity.ok(quotationService.submitVendorQuotation(quotationSubmissionRequest));
     }
 }

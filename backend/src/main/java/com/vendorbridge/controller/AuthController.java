@@ -16,12 +16,18 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/signup")
-    public ResponseEntity<AuthResponse> signup(@RequestBody SignupRequest request) {
-        return ResponseEntity.ok(authService.signup(request));
+    public ResponseEntity<AuthResponse> registerSystemUser(@RequestBody SignupRequest registrationPayload) {
+        return ResponseEntity.ok(authService.registerSystemUser(registrationPayload));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request) {
-        return ResponseEntity.ok(authService.login(request));
+    public ResponseEntity<AuthResponse> authenticateSystemUser(@RequestBody AuthRequest authenticationPayload) {
+        return ResponseEntity.ok(authService.authenticateSystemUser(authenticationPayload));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<String> forgotPassword(@RequestParam String email) {
+        // Mock email trigger for password reset
+        return ResponseEntity.ok("If an account exists, a password reset link has been sent to " + email);
     }
 }
