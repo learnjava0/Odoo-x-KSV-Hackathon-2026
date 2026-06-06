@@ -4,7 +4,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/vendorbridge
     username: postgres
-    password: your_password_here 
+    password: 12345678
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -16,7 +16,7 @@ spring:
         format_sql: true
 
 server:
-  port: 8080
+  port: 8088
 
 application:
   security:
