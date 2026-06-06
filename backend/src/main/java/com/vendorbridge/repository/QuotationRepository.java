@@ -10,6 +10,8 @@ import java.util.List;
 public interface QuotationRepository extends JpaRepository<Quotation, Long> {
     // Crucial for the business logic requirement: sorting by price ascending
     List<Quotation> findByRfqIdOrderByPriceAsc(Long rfqId);
+
+    List<Quotation> findByStatusOrderByIdDesc(com.vendorbridge.model.enums.ProcurementState status);
     
     long countByStatus(com.vendorbridge.model.enums.ProcurementState status);
 }

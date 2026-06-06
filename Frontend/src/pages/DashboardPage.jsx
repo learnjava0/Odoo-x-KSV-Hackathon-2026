@@ -25,8 +25,20 @@ export default function DashboardPage() {
     try {
       setLoading(true);
       setError('');
-      const { data } = await api.get('/api/dashboard/summary');
-      setSummary({ monthlySpend: [], ...data });
+      const { data } = await api.get('/analytics/dashboard');
+      const monthlySpend = (data.recentInvoices || []).map((invoice) => ({
+        month: invoice.invoiceNumber,
+        amount: invoice.totalAmount
+      }));
+      setSummary({
+        monthlySpend,
+        pendingApprovals: data.pendingApprovals,
+        activeRfqs: data.activeRfqs,
+        vendorCount: data.totalVendors,
+        purchaseOrders: data.recentPurchaseOrders?.length ?? 0,
+        invoiceCount: data.recentInvoices?.length ?? 0,
+        quotationCount: data.pendingApprovals
+      });
     } catch {
       setError('Check that the API is running, then try again.');
     } finally {

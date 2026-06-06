@@ -109,7 +109,7 @@ mvn spring-boot:run
 
 The entire enterprise REST ecosystem is fully mapped under strict OpenAPI regulations. Use the sandbox playground link below to inspect payloads, execute mock queries, and review communication parameters live:
 
-👉 **`http://localhost:8080/swagger-ui.html`**
+👉 **`http://localhost:8088/swagger-ui.html`**
 
 ---
 
@@ -125,7 +125,6 @@ The stateless filtering pipeline wraps endpoints using method-level security gua
 
 > [!NOTE]
 > **Elegant Failure Handling:** When a user attempts to cross-reach beyond their role scope, the `CustomAccessDeniedHandler` converts the raw Spring Security exception into a pristine JSON response payload containing a user-friendly error string and an explicit `/dashboard` redirect instruction tailored specifically for frontend Toast alert engines.
-
 
 
 

@@ -47,13 +47,15 @@ public class ApprovalService {
         vendorQuotation.setRemarks(approvalDecisionRequest.getApprovalRemark());
 
         if (!approvalDecisionRequest.isPurchaseOrderApproved()) {
-            stateMachine.transitionState(vendorQuotation.getStatus(), ProcurementState.REJECTED, managerProfile, "QUOTATION", vendorQuotation.getId().toString(), approvalDecisionRequest.getApprovalRemark(), "APPROVAL_REJECTED");
+            stateMachine.transitionState(vendorQuotation.getStatus(), ProcurementState.PENDING_APPROVAL, managerProfile, "QUOTATION", vendorQuotation.getId().toString(), "Manager review started", "APPROVAL_REVIEW_STARTED");
+            stateMachine.transitionState(ProcurementState.PENDING_APPROVAL, ProcurementState.REJECTED, managerProfile, "QUOTATION", vendorQuotation.getId().toString(), approvalDecisionRequest.getApprovalRemark(), "APPROVAL_REJECTED");
             vendorQuotation.setStatus(ProcurementState.REJECTED);
             quotationRepository.save(vendorQuotation);
             return null;
         }
 
-        stateMachine.transitionState(vendorQuotation.getStatus(), ProcurementState.APPROVED, managerProfile, "QUOTATION", vendorQuotation.getId().toString(), approvalDecisionRequest.getApprovalRemark(), "APPROVAL_GRANTED");
+        stateMachine.transitionState(vendorQuotation.getStatus(), ProcurementState.PENDING_APPROVAL, managerProfile, "QUOTATION", vendorQuotation.getId().toString(), "Manager review started", "APPROVAL_REVIEW_STARTED");
+        stateMachine.transitionState(ProcurementState.PENDING_APPROVAL, ProcurementState.APPROVED, managerProfile, "QUOTATION", vendorQuotation.getId().toString(), approvalDecisionRequest.getApprovalRemark(), "APPROVAL_GRANTED");
         vendorQuotation.setStatus(ProcurementState.APPROVED);
         quotationRepository.save(vendorQuotation);
 

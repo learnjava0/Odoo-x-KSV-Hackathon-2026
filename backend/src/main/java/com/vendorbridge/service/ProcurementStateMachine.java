@@ -48,6 +48,9 @@ public class ProcurementStateMachine {
         if (current == null && next == ProcurementState.DRAFT) return true;
         if (current == ProcurementState.DRAFT && next == ProcurementState.PUBLISHED) return true;
         if (current == ProcurementState.PUBLISHED && next == ProcurementState.UNDER_REVIEW) return true;
+        if (current == ProcurementState.UNDER_REVIEW && next == ProcurementState.UNDER_REVIEW) {
+            return actorRole == Role.VENDOR;
+        }
         
         if (current == ProcurementState.UNDER_REVIEW && next == ProcurementState.PENDING_APPROVAL) return true;
         
@@ -63,6 +66,9 @@ public class ProcurementStateMachine {
         }
         
         if (current == ProcurementState.APPROVED && next == ProcurementState.FULFILLED) return true;
+        if (current == ProcurementState.APPROVED && next == ProcurementState.APPROVED) {
+            return actorRole == Role.MANAGER || actorRole == Role.ADMIN;
+        }
 
         return false;
     }

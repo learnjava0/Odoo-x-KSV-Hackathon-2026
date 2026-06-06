@@ -15,7 +15,7 @@ export default function VendorsPage() {
     try {
       setLoading(true);
       setError('');
-      const { data } = await api.get('/api/vendors', { params: { q: query } });
+      const { data } = await api.get('/vendors', { params: { q: query } });
       setVendors(data);
     } catch {
       setError('The vendor directory could not be loaded.');
@@ -54,8 +54,8 @@ export default function VendorsPage() {
           <TableHead>
             <TableRow>
               <TableCell>Name</TableCell>
-              <TableCell>Company</TableCell>
-              <TableCell>Email</TableCell>
+              <TableCell>Contact</TableCell>
+              <TableCell>GST number</TableCell>
               <TableCell>Category</TableCell>
               <TableCell>Status</TableCell>
               <TableCell>Score</TableCell>
@@ -72,15 +72,15 @@ export default function VendorsPage() {
             />
             {vendors.map((vendor) => (
               <TableRow key={vendor.id}>
-                <TableCell>{vendor.vendorName}</TableCell>
-                <TableCell>{vendor.companyName}</TableCell>
-                <TableCell>{vendor.email}</TableCell>
+                <TableCell>{vendor.name}</TableCell>
+                <TableCell>{vendor.contactDetails || 'Not provided'}</TableCell>
+                <TableCell>{vendor.gstNumber || 'Not provided'}</TableCell>
                 <TableCell>{vendor.category}</TableCell>
                 <TableCell><Box component="span" sx={{ color: 'primary.main', fontWeight: 700 }}>{vendor.status}</Box></TableCell>
                 <TableCell>
                   <Box className="score-cell">
-                    <Box component="span">{vendor.performanceScore ?? 0}</Box>
-                    <LinearProgress variant="determinate" value={Math.min(Number(vendor.performanceScore) || 0, 100)} />
+                    <Box component="span">{vendor.rating ?? 0}</Box>
+                    <LinearProgress variant="determinate" value={Math.min((Number(vendor.rating) || 0) * 20, 100)} />
                   </Box>
                 </TableCell>
               </TableRow>

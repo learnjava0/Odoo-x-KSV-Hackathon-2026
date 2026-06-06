@@ -18,12 +18,17 @@ export default function ReportsPage() {
     try {
       setLoading(true);
       setError('');
-      const [vendorResponse, costResponse] = await Promise.all([
-        api.get('/api/reports/vendor-performance'),
-        api.get('/api/reports/procurement-cost')
-      ]);
-      setVendors(vendorResponse.data);
-      setCost(costResponse.data);
+      const { data } = await api.get('/analytics/dashboard');
+      setVendors((data.recentInvoices || []).map((invoice) => ({
+        vendor: invoice.invoiceNumber,
+        score: invoice.purchaseOrder?.totalAmount ?? 0,
+        onTime: invoice.taxAmount ?? 0
+      })));
+      setCost({
+        quarter: 'Current',
+        actual: data.totalSpent,
+        savings: 0
+      });
     } catch {
       setError('Reporting data is temporarily unavailable.');
     } finally {
@@ -35,7 +40,7 @@ export default function ReportsPage() {
 
   return (
     <>
-      <PageHeader title="Reports" subtitle="Vendor performance, procurement cost, spending trend, and approval metrics." />
+      <PageHeader title="Reports" subtitle="Procurement spend and recent invoice totals from backend analytics." />
       <div className="page-grid">
         <div className="metric-card stagger-enter">
           <Typography color="text.secondary">Quarter</Typography>
@@ -50,18 +55,18 @@ export default function ReportsPage() {
         <div className="metric-card stagger-enter" style={{ '--enter-delay': '140ms' }}>
           <Typography color="text.secondary">Savings</Typography>
           <Typography variant="h5"><AnimatedNumber value={cost.savings} formatter={formatCurrency} /></Typography>
-          <Typography className="metric-context">Value retained through sourcing</Typography>
+          <Typography className="metric-context">Not calculated by the current backend</Typography>
         </div>
       </div>
       <Box className="data-card chart-card">
         <Box className="section-heading">
           <Box>
-            <Typography className="chart-card-title">Vendor performance</Typography>
-            <Typography className="section-subtitle">Compare overall score with on-time delivery performance.</Typography>
+            <Typography className="chart-card-title">Recent invoice composition</Typography>
+            <Typography className="section-subtitle">Compare purchase-order base amount with calculated tax.</Typography>
           </Box>
           <Box className="chart-legend">
-            <span className="score" /> Score
-            <span className="delivery" /> On time
+            <span className="score" /> Base amount
+            <span className="delivery" /> Tax
           </Box>
         </Box>
         {loading || error || !vendors.length ? (
@@ -69,8 +74,8 @@ export default function ReportsPage() {
             loading={loading}
             error={error}
             onRetry={load}
-            title="No vendor performance yet"
-            description="Performance metrics will appear after vendors complete orders."
+            title="No invoice analytics yet"
+            description="Invoice totals will appear after a manager approves a quotation."
           />
         ) : (
           <ResponsiveContainer width="100%" height="76%">
@@ -79,8 +84,8 @@ export default function ReportsPage() {
               <XAxis dataKey="vendor" axisLine={false} tickLine={false} tick={{ fill: '#78857e', fontSize: 12 }} />
               <YAxis axisLine={false} tickLine={false} tick={{ fill: '#78857e', fontSize: 12 }} />
               <Tooltip content={<ChartTooltip />} cursor={{ fill: '#f2f7f4' }} />
-              <Bar dataKey="score" name="Score" fill="#1b7a53" radius={[4, 4, 0, 0]} animationDuration={800} />
-              <Bar dataKey="onTime" name="On time" fill="#d6a251" radius={[4, 4, 0, 0]} animationDuration={1000} />
+              <Bar dataKey="score" name="Base amount" fill="#1b7a53" radius={[4, 4, 0, 0]} animationDuration={800} />
+              <Bar dataKey="onTime" name="Tax" fill="#d6a251" radius={[4, 4, 0, 0]} animationDuration={1000} />
             </BarChart>
           </ResponsiveContainer>
         )}

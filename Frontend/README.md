@@ -20,11 +20,11 @@ npm run dev
 ```
 
 The development server runs at `http://localhost:5173` and proxies `/api`
-requests to `http://localhost:8081`.
+requests to the Spring Boot API at `http://localhost:8088`. API calls use
+the `/api/v1` prefix.
 
 ## Available Scripts
 
 - `npm run dev` starts the development server.
 - `npm run build` creates a production build.
 - `npm run preview` serves the production build locally.
-

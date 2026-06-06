@@ -2,6 +2,8 @@ import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
 import { Route, Routes } from 'react-router-dom';
 import AppLayout from './layouts/AppLayout.jsx';
 import ProtectedRoute from './routes/ProtectedRoute.jsx';
+import RoleRoute from './routes/RoleRoute.jsx';
+import { routeAccess } from './config/access.js';
 import LoginPage from './pages/LoginPage.jsx';
 import DashboardPage from './pages/DashboardPage.jsx';
 import VendorsPage from './pages/VendorsPage.jsx';
@@ -56,14 +58,30 @@ export default function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
-            <Route path="/" element={<DashboardPage />} />
-            <Route path="/vendors" element={<VendorsPage />} />
-            <Route path="/rfqs" element={<RfqsPage />} />
-            <Route path="/quotations" element={<QuotationsPage />} />
-            <Route path="/approvals" element={<ApprovalsPage />} />
-            <Route path="/documents" element={<DocumentsPage />} />
-            <Route path="/notifications" element={<NotificationsPage />} />
-            <Route path="/reports" element={<ReportsPage />} />
+            <Route element={<RoleRoute allowedRoles={routeAccess.dashboard} />}>
+              <Route path="/" element={<DashboardPage />} />
+            </Route>
+            <Route element={<RoleRoute allowedRoles={routeAccess.vendors} />}>
+              <Route path="/vendors" element={<VendorsPage />} />
+            </Route>
+            <Route element={<RoleRoute allowedRoles={routeAccess.rfqs} />}>
+              <Route path="/rfqs" element={<RfqsPage />} />
+            </Route>
+            <Route element={<RoleRoute allowedRoles={routeAccess.quotations} />}>
+              <Route path="/quotations" element={<QuotationsPage />} />
+            </Route>
+            <Route element={<RoleRoute allowedRoles={routeAccess.approvals} />}>
+              <Route path="/approvals" element={<ApprovalsPage />} />
+            </Route>
+            <Route element={<RoleRoute allowedRoles={routeAccess.documents} />}>
+              <Route path="/documents" element={<DocumentsPage />} />
+            </Route>
+            <Route element={<RoleRoute allowedRoles={routeAccess.activities} />}>
+              <Route path="/notifications" element={<NotificationsPage />} />
+            </Route>
+            <Route element={<RoleRoute allowedRoles={routeAccess.reports} />}>
+              <Route path="/reports" element={<ReportsPage />} />
+            </Route>
           </Route>
         </Route>
       </Routes>

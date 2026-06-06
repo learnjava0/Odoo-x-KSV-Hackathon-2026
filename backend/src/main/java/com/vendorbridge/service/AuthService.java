@@ -56,7 +56,7 @@ public class AuthService {
         }
 
         String jwtToken = jwtService.generateToken(registeredUser);
-        return new AuthResponse(jwtToken);
+        return new AuthResponse(jwtToken, registeredUser.getEmail(), registeredUser.getRole());
     }
 
     public AuthResponse authenticateSystemUser(AuthRequest authenticationPayload) {
@@ -71,6 +71,6 @@ public class AuthService {
                 .orElseThrow(() -> new RuntimeException("Procurement identity mismatch"));
 
         String jwtToken = jwtService.generateToken(registeredUser);
-        return new AuthResponse(jwtToken);
+        return new AuthResponse(jwtToken, registeredUser.getEmail(), registeredUser.getRole());
     }
 }

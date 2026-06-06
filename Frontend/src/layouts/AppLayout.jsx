@@ -30,18 +30,19 @@ import { useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../store/store.js';
+import { routeAccess } from '../config/access.js';
 
 const drawerWidth = 228;
 
 const nav = [
-  { label: 'Dashboard', to: '/', icon: <DashboardOutlined /> },
-  { label: 'Vendors', to: '/vendors', icon: <Inventory2Outlined /> },
-  { label: 'RFQs', to: '/rfqs', icon: <DescriptionOutlined /> },
-  { label: 'Quotations', to: '/quotations', icon: <AssignmentTurnedInOutlined /> },
-  { label: 'Approvals', to: '/approvals', icon: <GavelOutlined /> },
-  { label: 'PO & Invoices', to: '/documents', icon: <ReceiptLongOutlined /> },
-  { label: 'Reports', to: '/reports', icon: <AssessmentOutlined /> },
-  { label: 'Activity', to: '/notifications', icon: <NotificationsNoneOutlined /> }
+  { label: 'Dashboard', to: '/', icon: <DashboardOutlined />, roles: routeAccess.dashboard },
+  { label: 'Vendors', to: '/vendors', icon: <Inventory2Outlined />, roles: routeAccess.vendors },
+  { label: 'RFQs', to: '/rfqs', icon: <DescriptionOutlined />, roles: routeAccess.rfqs },
+  { label: 'Quotations', to: '/quotations', icon: <AssignmentTurnedInOutlined />, roles: routeAccess.quotations },
+  { label: 'Approvals', to: '/approvals', icon: <GavelOutlined />, roles: routeAccess.approvals },
+  { label: 'PO & Invoices', to: '/documents', icon: <ReceiptLongOutlined />, roles: routeAccess.documents },
+  { label: 'Reports', to: '/reports', icon: <AssessmentOutlined />, roles: routeAccess.reports },
+  { label: 'Activity', to: '/notifications', icon: <NotificationsNoneOutlined />, roles: routeAccess.activities }
 ];
 
 export default function AppLayout() {
@@ -68,7 +69,7 @@ export default function AppLayout() {
       <Divider />
       <Typography className="nav-label">Workspace</Typography>
       <List className="nav-list">
-        {nav.map((item) => (
+        {nav.filter((item) => item.roles.includes(user?.role)).map((item) => (
           <ListItemButton
             key={item.to}
             component={NavLink}

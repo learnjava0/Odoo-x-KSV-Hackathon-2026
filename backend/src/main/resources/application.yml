@@ -2,9 +2,9 @@ spring:
   application:
     name: VendorBridge Backend
   datasource:
-    url: jdbc:postgresql://localhost:5432/vendorbridge
-    username: postgres
-    password: 12345678
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/vendorbridge}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:password}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -16,7 +16,7 @@ spring:
         format_sql: true
 
 server:
-  port: 8088
+  port: ${SERVER_PORT:8088}
 
 application:
   security:

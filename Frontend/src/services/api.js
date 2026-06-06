@@ -1,8 +1,8 @@
 import axios from 'axios';
-import { store } from '../store/store.js';
+import { logout, store } from '../store/store.js';
 
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || ''
+  baseURL: import.meta.env.VITE_API_URL || '/api/v1'
 });
 
 api.interceptors.request.use((config) => {
@@ -12,6 +12,16 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      store.dispatch(logout());
+    }
+    return Promise.reject(error);
+  }
+);
 
 export const downloadFile = async (url, filename) => {
   const response = await api.get(url, { responseType: 'blob' });

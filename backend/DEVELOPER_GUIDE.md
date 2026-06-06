@@ -115,6 +115,6 @@ Instead of throwing a standard raw Spring Security white-label error page that b
 ## 🔌 API Sandbox & Mock Testing (For Frontend)
 
 The entire REST ecosystem is compiled under OpenAPI regulations. Our frontend team can review and live-test the core communication contract at any time:
-👉 `http://localhost:8080/swagger-ui.html`
+👉 `http://localhost:8088/swagger-ui.html`
 
 ---

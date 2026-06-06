@@ -8,6 +8,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Locale;
 
 @RestController
 @RequestMapping("/api/v1/vendors")
@@ -18,8 +19,18 @@ public class VendorController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'PROCUREMENT_OFFICER')")
-    public ResponseEntity<List<Vendor>> getAllVendors() {
-        return ResponseEntity.ok(vendorRepository.findAll());
+    public ResponseEntity<List<Vendor>> getAllVendors(@RequestParam(required = false) String q) {
+        List<Vendor> vendors = vendorRepository.findAll();
+        if (q == null || q.isBlank()) {
+            return ResponseEntity.ok(vendors);
+        }
+
+        String query = q.toLowerCase(Locale.ROOT);
+        return ResponseEntity.ok(vendors.stream()
+                .filter(vendor -> contains(vendor.getName(), query)
+                        || contains(vendor.getCategory(), query)
+                        || contains(vendor.getContactDetails(), query))
+                .toList());
     }
     
     @GetMapping("/{id}")
@@ -27,5 +38,9 @@ public class VendorController {
         return vendorRepository.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    private boolean contains(String value, String query) {
+        return value != null && value.toLowerCase(Locale.ROOT).contains(query);
     }
 }

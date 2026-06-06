@@ -17,7 +17,7 @@ export default function ApprovalsPage() {
     try {
       setLoading(true);
       setError('');
-      const { data } = await api.get('/api/approvals/pending');
+      const { data } = await api.get('/approvals/pending');
       setApprovals(data);
     } catch {
       setError('The approval queue could not be loaded.');
@@ -31,8 +31,11 @@ export default function ApprovalsPage() {
   const decide = async (id, action) => {
     try {
       setWorkingId(id);
-      await api.post(`/api/approvals/${id}/${action}`, { remarks: action === 'approve' ? 'Approved for PO generation.' : 'Rejected for revision.' });
-      setMessage(action === 'approve' ? 'Quotation approved for PO generation.' : 'Quotation returned for revision.');
+      await api.post(`/approvals/${id}`, {
+        purchaseOrderApproved: action === 'approve',
+        approvalRemark: action === 'approve' ? 'Approved for PO and invoice generation.' : 'Rejected for revision.'
+      });
+      setMessage(action === 'approve' ? 'Approved. The PO and invoice were generated automatically.' : 'Quotation rejected.');
       load();
     } catch {
       setMessage('The decision could not be saved. Please try again.');
@@ -66,10 +69,10 @@ export default function ApprovalsPage() {
             <TableState loading={loading} error={error} empty={!approvals.length} colSpan={5} emptyTitle="All approvals are up to date" onRetry={load} />
             {approvals.map((approval) => (
               <TableRow key={approval.id}>
-                <TableCell>#{approval.quotation.id}</TableCell>
-                <TableCell>{approval.quotation.vendor.vendorName}</TableCell>
-                <TableCell><strong>{formatCurrency(approval.quotation.grandTotal)}</strong></TableCell>
-                <TableCell>{approval.remarks}</TableCell>
+                <TableCell>#{approval.id}</TableCell>
+                <TableCell>{approval.vendor?.name || 'Unknown vendor'}</TableCell>
+                <TableCell><strong>{formatCurrency(approval.price)}</strong></TableCell>
+                <TableCell>{approval.notes || 'No vendor notes'}</TableCell>
                 <TableCell align="right">
                   <Button startIcon={<CheckCircle />} disabled={workingId === approval.id} onClick={() => decide(approval.id, 'approve')}>Approve</Button>
                   <Button startIcon={<Cancel />} color="error" disabled={workingId === approval.id} onClick={() => decide(approval.id, 'reject')}>Reject</Button>
