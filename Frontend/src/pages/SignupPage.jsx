@@ -1,58 +1,54 @@
 import {
   CheckCircleOutline,
   EmailOutlined,
-  LocalShippingOutlined,
   LockOutlined,
   Visibility,
-  VisibilityOff
+  VisibilityOff,
+  AccountCircle,
+  LocalShippingOutlined,
+  FlagOutlined
 } from '@mui/icons-material';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../services/api.js';
-import { setCredentials } from '../store/store.js';
-import { getDefaultRoute } from '../config/access.js';
 
-const demoUsers = [
-  { email: 'admin@vendorbridge.com', password: 'admin123', label: 'Admin' },
-  { email: 'manager@vendorbridge.com', password: 'manager123', label: 'Manager' },
-  { email: 'procurement@vendorbridge.com', password: 'procurement123', label: 'Procurement' },
-  { email: 'vendor@vendorbridge.com', password: 'vendor123', label: 'Vendor' }
+const roles = [
+  { value: 'VENDOR', label: 'Vendor' },
+  { value: 'PROCUREMENT_OFFICER', label: 'Procurement Officer' },
+  { value: 'MANAGER', label: 'Manager' },
+  { value: 'ADMIN', label: 'Admin' }
 ];
 
-export default function LoginPage() {
-  const { register, handleSubmit, setValue } = useForm({
-    defaultValues: { email: demoUsers[2].email, password: demoUsers[2].password }
+export default function SignupPage() {
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors }
+  } = useForm({
+    defaultValues: { email: '', password: '', role: 'VENDOR', name: '', category: '', gstNumber: '', contactDetails: '' }
   });
   const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const selectedRole = watch('role');
 
   const onSubmit = async (values) => {
     try {
       setSubmitting(true);
       setError('');
-      const { data } = await api.post('/auth/login', values);
-      const name = data.email?.split('@')[0] || 'User';
-      dispatch(setCredentials({
-        token: data.token,
-        user: { name, email: data.email, role: data.role }
-      }));
-      navigate(getDefaultRoute(data.role));
-    } catch {
-      setError('Login failed. Check the selected account and password.');
+      setMessage('');
+      await api.post('/auth/signup', values);
+      setMessage('Account created. You can now sign in. Redirecting to login...');
+      setTimeout(() => navigate('/login'), 1200);
+    } catch (err) {
+      setError('Signup failed. Please verify your details and try again.');
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const selectDemoUser = (account) => {
-    setValue('email', account.email);
-    setValue('password', account.password);
-    setError('');
   };
 
   return (
@@ -75,11 +71,11 @@ export default function LoginPage() {
           </div>
           <h1 className="text-3xl font-extrabold tracking-tight mb-3">VendorBridge</h1>
           <p className="text-green-100/90 max-w-lg leading-relaxed mb-8">
-            One procurement workspace for sourcing, approvals, purchase orders, invoices, and analytics.
+            Join the procurement platform to manage RFQs, quotations, approvals and invoices from a single workspace.
           </p>
 
           <div className="mt-auto grid gap-3">
-            {['Compare vendor quotations', 'Keep approvals moving', 'Track spend and performance'].map((item) => (
+            {['Keep vendors organized', 'Track approvals', 'Generate invoices quickly'].map((item) => (
               <div key={item} className="flex items-center gap-3 text-green-100">
                 <div className="bg-green-900/30 rounded p-1.5">
                   <CheckCircleOutline className="text-green-300" fontSize="small" />
@@ -100,11 +96,11 @@ export default function LoginPage() {
         <div className="p-8 sm:p-10 md:p-12 flex flex-col justify-center">
           <div className="mb-6 flex items-center gap-3">
             <div className="w-11 h-11 rounded-lg bg-green-50 text-green-800 grid place-items-center">
-              <LocalShippingOutlined />
+              <AccountCircle />
             </div>
             <div>
-              <h2 className="text-2xl font-extrabold">Welcome back</h2>
-              <p className="text-sm text-gray-500">Sign in to continue to your workspace.</p>
+              <h2 className="text-2xl font-extrabold">Create your account</h2>
+              <p className="text-sm text-gray-500">Register a new vendor or procurement identity for VendorBridge.</p>
             </div>
           </div>
 
@@ -114,14 +110,20 @@ export default function LoginPage() {
             </div>
           )}
 
+          {message && (
+            <div role="status" className="mb-4 rounded-md bg-emerald-50 border border-emerald-100 text-emerald-800 px-4 py-3 text-sm">
+              {message}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
-            <label htmlFor="login-email" className="text-sm text-gray-700">Email</label>
+            <label htmlFor="signup-email" className="text-sm text-gray-700">Email</label>
             <div className="flex items-center gap-2">
               <div className="p-3 bg-gray-50 rounded-[12px] border border-gray-100">
                 <EmailOutlined fontSize="small" className="text-gray-400" />
               </div>
               <input
-                id="login-email"
+                id="signup-email"
                 type="email"
                 autoComplete="email"
                 {...register('email', { required: true })}
@@ -130,18 +132,18 @@ export default function LoginPage() {
               />
             </div>
 
-            <label htmlFor="login-password" className="text-sm text-gray-700">Password</label>
+            <label htmlFor="signup-password" className="text-sm text-gray-700">Password</label>
             <div className="flex items-center gap-2">
               <div className="p-3 bg-gray-50 rounded-[12px] border border-gray-100">
                 <LockOutlined fontSize="small" className="text-gray-400" />
               </div>
               <input
-                id="login-password"
-                autoComplete="current-password"
-                {...register('password', { required: true })}
+                id="signup-password"
+                autoComplete="new-password"
+                {...register('password', { required: true, minLength: 6 })}
                 type={showPassword ? 'text' : 'password'}
                 className="min-w-0 flex-1 py-3 px-4 rounded-[12px] border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition-shadow text-sm"
-                placeholder="Enter your password"
+                placeholder="Create a password"
               />
               <button
                 type="button"
@@ -153,35 +155,73 @@ export default function LoginPage() {
               </button>
             </div>
 
+            <label htmlFor="signup-role" className="text-sm text-gray-700">Role</label>
+            <div className="flex items-center gap-2">
+              <div className="p-3 bg-gray-50 rounded-[12px] border border-gray-100">
+                <FlagOutlined fontSize="small" className="text-gray-400" />
+              </div>
+              <select
+                id="signup-role"
+                {...register('role', { required: true })}
+                className="min-w-0 flex-1 py-3 px-4 rounded-[12px] border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition-shadow text-sm"
+              >
+                {roles.map((role) => (
+                  <option key={role.value} value={role.value}>{role.label}</option>
+                ))}
+              </select>
+            </div>
+
+            {selectedRole === 'VENDOR' && (
+              <>
+                <label htmlFor="signup-name" className="text-sm text-gray-700">Vendor name</label>
+                <div className="flex items-center gap-2">
+                  <div className="p-3 bg-gray-50 rounded-[12px] border border-gray-100">
+                    <AccountCircle fontSize="small" className="text-gray-400" />
+                  </div>
+                  <input
+                    id="signup-name"
+                    {...register('name', { required: true })}
+                    className="min-w-0 flex-1 py-3 px-4 rounded-[12px] border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition-shadow text-sm"
+                    placeholder="Vendor company name"
+                  />
+                </div>
+
+                <label htmlFor="signup-category" className="text-sm text-gray-700">Category</label>
+                <input
+                  id="signup-category"
+                  {...register('category')}
+                  className="py-3 px-4 rounded-[12px] border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition-shadow text-sm"
+                  placeholder="Office supplies, hardware, etc."
+                />
+
+                <label htmlFor="signup-gst" className="text-sm text-gray-700">GST number</label>
+                <input
+                  id="signup-gst"
+                  {...register('gstNumber')}
+                  className="py-3 px-4 rounded-[12px] border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition-shadow text-sm"
+                  placeholder="24ABCDE1234F1Z5"
+                />
+
+                <label htmlFor="signup-contact" className="text-sm text-gray-700">Contact details</label>
+                <input
+                  id="signup-contact"
+                  {...register('contactDetails')}
+                  className="py-3 px-4 rounded-[12px] border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition-shadow text-sm"
+                  placeholder="vendor@company.com"
+                />
+              </>
+            )}
+
             <button
               type="submit"
               disabled={submitting}
               className="w-full mt-2 inline-flex items-center justify-center rounded-[12px] bg-[#176344] text-white py-3 text-sm font-semibold shadow-sm hover:shadow-md hover:bg-[#145032] active:translate-y-[1px] transition disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {submitting ? 'Signing in...' : 'Sign in'}
+              {submitting ? 'Creating account...' : 'Create account'}
             </button>
 
-            <div className="text-center text-xs text-gray-400">Demo accounts</div>
-            <div className="flex flex-wrap gap-2 justify-center">
-              {demoUsers.map((account) => (
-                <button
-                  key={account.email}
-                  type="button"
-                  onClick={() => selectDemoUser(account)}
-                  className="px-3 py-1.5 rounded-full border border-gray-200 text-sm bg-gray-50 hover:bg-gray-100 transition"
-                >
-                  {account.label}
-                </button>
-              ))}
-            </div>
-
-            <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-gray-500">
-              <Link to="/forgot-password" className="font-semibold text-[#176344] hover:text-[#145032]">
-                Forgot password?
-              </Link>
-              <Link to="/signup" className="font-semibold text-[#176344] hover:text-[#145032]">
-                Create an account
-              </Link>
+            <div className="text-center text-sm text-gray-500">
+              Already have an account? <Link to="/login" className="font-semibold text-[#176344]">Sign in</Link>
             </div>
           </form>
         </div>

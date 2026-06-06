@@ -13,6 +13,8 @@ import ApprovalsPage from './pages/ApprovalsPage.jsx';
 import DocumentsPage from './pages/DocumentsPage.jsx';
 import NotificationsPage from './pages/NotificationsPage.jsx';
 import ReportsPage from './pages/ReportsPage.jsx';
+import SignupPage from './pages/SignupPage.jsx';
+import ForgotPasswordPage from './pages/ForgotPasswordPage.jsx';
 
 const theme = createTheme({
   palette: {
@@ -56,6 +58,8 @@ export default function App() {
       <CssBaseline />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
             <Route element={<RoleRoute allowedRoles={routeAccess.dashboard} />}>
