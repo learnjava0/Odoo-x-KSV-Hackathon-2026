@@ -7,6 +7,7 @@ import {
   Inventory2Outlined,
   LocalShippingOutlined,
   Logout,
+  ManageAccountsOutlined,
   Menu,
   NotificationsNoneOutlined,
   ReceiptLongOutlined
@@ -35,14 +36,16 @@ import { routeAccess } from '../config/access.js';
 const drawerWidth = 228;
 
 const nav = [
-  { label: 'Dashboard', to: '/', icon: <DashboardOutlined />, roles: routeAccess.dashboard },
-  { label: 'Vendors', to: '/vendors', icon: <Inventory2Outlined />, roles: routeAccess.vendors },
-  { label: 'RFQs', to: '/rfqs', icon: <DescriptionOutlined />, roles: routeAccess.rfqs },
-  { label: 'Quotations', to: '/quotations', icon: <AssignmentTurnedInOutlined />, roles: routeAccess.quotations },
-  { label: 'Approvals', to: '/approvals', icon: <GavelOutlined />, roles: routeAccess.approvals },
-  { label: 'PO & Invoices', to: '/documents', icon: <ReceiptLongOutlined />, roles: routeAccess.documents },
-  { label: 'Reports', to: '/reports', icon: <AssessmentOutlined />, roles: routeAccess.reports },
-  { label: 'Activity', to: '/notifications', icon: <NotificationsNoneOutlined />, roles: routeAccess.activities }
+  { label: 'Dashboard',      to: '/',             icon: <DashboardOutlined />,          roles: routeAccess.dashboard },
+  { label: 'Vendors',        to: '/vendors',       icon: <Inventory2Outlined />,         roles: routeAccess.vendors },
+  { label: 'RFQs',           to: '/rfqs',          icon: <DescriptionOutlined />,        roles: routeAccess.rfqs },
+  { label: 'Quotations',     to: '/quotations',    icon: <AssignmentTurnedInOutlined />, roles: routeAccess.quotations },
+  { label: 'Approvals',      to: '/approvals',     icon: <GavelOutlined />,              roles: routeAccess.approvals },
+  { label: 'Purchase orders',to: '/documents',     icon: <ReceiptLongOutlined />,        roles: routeAccess.documents },
+  { label: 'Invoices',       to: '/documents',     icon: <ReceiptLongOutlined />,        roles: routeAccess.documents },
+  { label: 'Reports',        to: '/reports',       icon: <AssessmentOutlined />,         roles: routeAccess.reports },
+  { label: 'Activity',       to: '/notifications', icon: <NotificationsNoneOutlined />,  roles: routeAccess.activities },
+  { label: 'Admin',          to: '/admin',         icon: <ManageAccountsOutlined />,     roles: routeAccess.admin }
 ];
 
 export default function AppLayout() {
@@ -67,11 +70,10 @@ export default function AppLayout() {
         </Box>
       </Toolbar>
       <Divider />
-      <Typography className="nav-label">Workspace</Typography>
-      <List className="nav-list">
+      <List className="nav-list" sx={{ mt: 1 }}>
         {nav.filter((item) => item.roles.includes(user?.role)).map((item) => (
           <ListItemButton
-            key={item.to}
+            key={item.to + item.label}
             component={NavLink}
             to={item.to}
             onClick={() => setMobileOpen(false)}
@@ -86,7 +88,7 @@ export default function AppLayout() {
         <Avatar>{user?.name?.charAt(0)?.toUpperCase() || 'U'}</Avatar>
         <Box sx={{ minWidth: 0 }}>
           <Typography className="sidebar-user" noWrap>{user?.name || 'User'}</Typography>
-          <Typography className="sidebar-role" noWrap>{user?.role || 'Procurement'}</Typography>
+          <Typography className="sidebar-role" noWrap>{user?.role?.replace('_', ' ') || 'Procurement'}</Typography>
         </Box>
       </Box>
     </Box>

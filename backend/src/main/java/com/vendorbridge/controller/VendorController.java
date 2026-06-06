@@ -1,6 +1,7 @@
 package com.vendorbridge.controller;
 
 import com.vendorbridge.model.Vendor;
+import com.vendorbridge.model.enums.VendorStatus;
 import com.vendorbridge.repository.VendorRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -38,6 +39,15 @@ public class VendorController {
         return vendorRepository.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PatchMapping("/{id}/status")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Vendor> updateVendorStatus(@PathVariable Long id, @RequestParam String status) {
+        return vendorRepository.findById(id).map(vendor -> {
+            vendor.setStatus(VendorStatus.valueOf(status.toUpperCase(Locale.ROOT)));
+            return ResponseEntity.ok(vendorRepository.save(vendor));
+        }).orElse(ResponseEntity.notFound().build());
     }
 
     private boolean contains(String value, String query) {

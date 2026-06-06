@@ -15,6 +15,7 @@ import NotificationsPage from './pages/NotificationsPage.jsx';
 import ReportsPage from './pages/ReportsPage.jsx';
 import SignupPage from './pages/SignupPage.jsx';
 import ForgotPasswordPage from './pages/ForgotPasswordPage.jsx';
+import AdminPage from './pages/AdminPage.jsx';
 
 const theme = createTheme({
   palette: {
@@ -85,6 +86,9 @@ export default function App() {
             </Route>
             <Route element={<RoleRoute allowedRoles={routeAccess.reports} />}>
               <Route path="/reports" element={<ReportsPage />} />
+            </Route>
+            <Route element={<RoleRoute allowedRoles={routeAccess.admin} />}>
+              <Route path="/admin" element={<AdminPage />} />
             </Route>
           </Route>
         </Route>

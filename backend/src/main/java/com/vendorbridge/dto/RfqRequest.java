@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -14,4 +15,6 @@ public class RfqRequest {
     private String productDetails;
     private Integer quantity;
     private LocalDate deadline;
+    private List<Long> assignedVendorIds;
+    private String attachmentName;
 }

@@ -13,7 +13,8 @@ export const routeAccess = {
   approvals: [ROLES.MANAGER],
   documents: [ROLES.ADMIN, ROLES.MANAGER, ROLES.PROCUREMENT],
   reports: [ROLES.ADMIN, ROLES.MANAGER],
-  activities: [ROLES.ADMIN, ROLES.MANAGER, ROLES.PROCUREMENT]
+  activities: [ROLES.ADMIN, ROLES.MANAGER, ROLES.PROCUREMENT],
+  admin: [ROLES.ADMIN]
 };
 
 export const getDefaultRoute = (role) => {

@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -34,4 +35,14 @@ public class Rfq {
     @ManyToOne
     @JoinColumn(name = "created_by_user_id", referencedColumnName = "id")
     private User createdBy;
+
+    private String attachmentName;
+
+    @ManyToMany
+    @JoinTable(
+        name = "rfq_assigned_vendors",
+        joinColumns = @JoinColumn(name = "rfq_id"),
+        inverseJoinColumns = @JoinColumn(name = "vendor_id")
+    )
+    private List<Vendor> assignedVendors;
 }
